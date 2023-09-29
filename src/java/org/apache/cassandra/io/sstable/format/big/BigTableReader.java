@@ -75,14 +75,11 @@ import org.apache.cassandra.io.util.FileHandle;
 import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.io.util.RandomAccessReader;
 import org.apache.cassandra.utils.ByteBufferUtil;
-<<<<<<< HEAD
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.cassandra.service.StorageService;
-=======
 import org.apache.cassandra.utils.IFilter;
 import org.apache.cassandra.utils.OutputHandler;
->>>>>>> cassandra-5
 
 import static org.apache.cassandra.utils.concurrent.SharedCloseable.sharedCopyOrNull;
 
@@ -99,17 +96,7 @@ public class BigTableReader extends SSTableReaderWithFilter implements IndexSumm
     private final IndexSummary indexSummary;
     private final FileHandle ifile;
 
-<<<<<<< HEAD
-    public UnfilteredRowIterator iterator(DecoratedKey key, Slices slices, ColumnFilter selectedColumns, boolean reversed, boolean isForThrift, SSTableReadsListener listener)
-    {
-        long startIndex = System.currentTimeMillis();
-        RowIndexEntry rie = getPosition(key, SSTableReader.Operator.EQ, listener);
-        StorageService.instance.readIndexBlock += System.currentTimeMillis() - startIndex;
-        return iterator(null, key, rie, slices, selectedColumns, reversed, isForThrift);
-    }
-=======
     private final KeyCache keyCache;
->>>>>>> cassandra-5
 
     public BigTableReader(Builder builder, SSTable.Owner owner)
     {
@@ -147,7 +134,9 @@ public class BigTableReader extends SSTableReaderWithFilter implements IndexSumm
                                              boolean reversed,
                                              SSTableReadsListener listener)
     {
+        long startIndex = System.currentTimeMillis();
         RowIndexEntry rie = getRowIndexEntry(key, SSTableReader.Operator.EQ, true, listener);
+        StorageService.instance.readIndexBlock += System.currentTimeMillis() - startIndex;
         return rowIterator(null, key, rie, slices, selectedColumns, reversed);
     }
 
@@ -318,25 +307,14 @@ public class BigTableReader extends SSTableReaderWithFilter implements IndexSumm
         // next, the key cache (only make sense for valid row key)
         if ((searchOp == Operator.EQ || searchOp == Operator.GE) && (key instanceof DecoratedKey))
         {
-<<<<<<< HEAD
             long startCache = System.currentTimeMillis();
-            DecoratedKey decoratedKey = (DecoratedKey)key;
-            KeyCacheKey cacheKey = new KeyCacheKey(metadata.ksAndCFName, descriptor, decoratedKey.getKey());
-            RowIndexEntry cachedPosition = getCachedPosition(cacheKey, updateCacheAndStats);
-            if (cachedPosition != null)
-            {
-                listener.onSSTableSelected(this, cachedPosition, SelectionReason.KEY_CACHE_HIT);
-                Tracing.trace("Key cache hit for sstable {}", descriptor.generation);
-                StorageService.instance.readKeyCache += System.currentTimeMillis() - startCache;
-                return cachedPosition;
-=======
             DecoratedKey decoratedKey = (DecoratedKey) key;
             AbstractRowIndexEntry cachedPosition = getCachedPosition(decoratedKey, updateStats);
             if (cachedPosition != null && cachedPosition.getSSTableFormat() == descriptor.getFormat())
             {
                 notifySelected(SelectionReason.KEY_CACHE_HIT, listener, operator, updateStats, cachedPosition);
+                StorageService.instance.readKeyCache += System.currentTimeMillis() - startCache;
                 return (RowIndexEntry) cachedPosition;
->>>>>>> cassandra-5
             }
         }
 

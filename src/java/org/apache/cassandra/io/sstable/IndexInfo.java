@@ -134,26 +134,9 @@ public class IndexInfo
             long offset = in.readUnsignedVInt();
             long width = in.readVInt() + WIDTH_BASE;
             DeletionTime endOpenMarker = null;
-<<<<<<< HEAD
-            if (version.storeRows())
-            {
-                offset = in.readUnsignedVInt();
-                width = in.readVInt() + WIDTH_BASE;
-                 StorageService.instance.totalReadBytes+=8;////
-                if (in.readBoolean())
-                    endOpenMarker = DeletionTime.serializer.deserialize(in);
-            }
-            else
-            {
-                offset = in.readLong();
-                width = in.readLong();
-                 StorageService.instance.totalReadBytes+=16;////
-            }
-=======
+            StorageService.instance.totalReadBytes+=8;////
             if (in.readBoolean())
                 endOpenMarker = DeletionTime.getSerializer(version).deserialize(in);
-
->>>>>>> cassandra-5
             return new IndexInfo(firstName, lastName, offset, width, endOpenMarker);
         }
 
