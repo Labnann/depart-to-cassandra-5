@@ -68,8 +68,6 @@ public class StreamTransferTask extends StreamTask
     {
         super(session, tableId);
     }
-
-<<<<<<< HEAD
     public synchronized void addTransferFile(Ref<SSTableReader> ref, long estimatedKeys, List<Pair<Long, Long>> sections, long repairedAt, int migrationFlag)
     {
         assert ref.get() != null && cfId.equals(ref.get().metadata.cfId);
@@ -79,10 +77,28 @@ public class StreamTransferTask extends StreamTask
         totalSize += message.header.size();
     }
 
+    public synchronized void addTransferStream(OutgoingStream stream, int migrationFlag)
+    {
+        Preconditions.checkArgument(tableId.equals(stream.getTableId()));
+        OutgoingStreamMessage message = new OutgoingStreamMessage(tableId, session, stream, sequenceNumber.getAndIncrement());
+        message = StreamHook.instance.reportOutgoingStream(session, stream, message, migrationFlag);
+        streams.put(message.header.sequenceNumber, message);
+        totalSize += message.stream.getEstimatedSize();
+        totalFiles += message.stream.getNumFiles();
+    }
+    
+
     public synchronized void addTransferFile(Ref<SSTableReader> ref, long estimatedKeys, List<Pair<Long, Long>> sections, long repairedAt)
-=======
+    {
+        assert ref.get() != null && cfId.equals(ref.get().metadata.cfId);
+        OutgoingFileMessage message = new OutgoingFileMessage(ref, sequenceNumber.getAndIncrement(), estimatedKeys, sections, repairedAt, session.keepSSTableLevel());
+        message = StreamHook.instance.reportOutgoingFile(session, ref.get(), message);
+        files.put(message.header.sequenceNumber, message);
+        totalSize += message.header.size();
+    }
+
+
     public synchronized void addTransferStream(OutgoingStream stream)
->>>>>>> cassandra-5
     {
         Preconditions.checkArgument(tableId.equals(stream.getTableId()));
         OutgoingStreamMessage message = new OutgoingStreamMessage(tableId, session, stream, sequenceNumber.getAndIncrement());

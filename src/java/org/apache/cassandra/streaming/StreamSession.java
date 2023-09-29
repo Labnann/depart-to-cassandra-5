@@ -70,15 +70,10 @@ import org.apache.cassandra.streaming.async.StreamingMultiplexedChannel;
 import org.apache.cassandra.streaming.messages.*;
 import org.apache.cassandra.utils.FBUtilities;
 import org.apache.cassandra.utils.JVMStabilityInspector;
-<<<<<<< HEAD
-import org.apache.cassandra.utils.Pair;
-import org.apache.cassandra.utils.concurrent.Ref;
-import org.apache.cassandra.utils.concurrent.Refs;
 import org.apache.cassandra.service.StorageService;
 
 import org.iq80.twoLayerLog.impl.*;
 
-=======
 import org.apache.cassandra.utils.NoSpamLogger;
 import org.apache.cassandra.utils.TimeUUID;
 import org.apache.cassandra.utils.concurrent.FutureCombiner;
@@ -88,7 +83,6 @@ import static org.apache.cassandra.config.CassandraRelevantProperties.CASSANDRA_
 import static org.apache.cassandra.utils.Clock.Global.nanoTime;
 import static org.apache.cassandra.locator.InetAddressAndPort.hostAddressAndPort;
 import static org.apache.cassandra.utils.FBUtilities.getBroadcastAddressAndPort;
->>>>>>> cassandra-5
 
 /**
  * Handles the streaming a one or more streams to and from a specific remote node.
@@ -439,7 +433,8 @@ public class StreamSession
         requests.add(new StreamRequest(keyspace, fullRanges, transientRanges, columnFamilies));
     }
 
-    /**
+   
+     /**
      * Set up transfer for specific keyspace/ranges/CFs
      *
      * @param keyspace Transfer keyspace
@@ -454,7 +449,6 @@ public class StreamSession
         if (flushTables)
             flushSSTables(stores);
 
-<<<<<<< HEAD
         logger.debug("ranges size:{}", ranges.size());
         //List<Range<Token>> normalizedRanges = Range.normalize(ranges);
         List<Range<Token>> mainRanges = new ArrayList<Range<Token>>(ranges.size());
@@ -476,7 +470,7 @@ public class StreamSession
             //logger.debug("range left:{}, range right:{}, IP of main range:{}, LOCAL:{}", curRange.left, curRange.right, ep.get(0), LOCAL);
         }
         ////////////////////////////////////////
-        UUID cfId = UUID.randomUUID();
+        TableId cfId = TableId.fromUUID(UUID.randomUUID());
         logger.debug("rightBoundMap size:{}", rightBoundMap.size());
         List<FileMetaData> groupMetaList = new ArrayList<FileMetaData>();
 
@@ -514,8 +508,6 @@ public class StreamSession
                  logger.debug("in addTransferRanges, details.sections.isEmpty");
             }
         }*/
-        try
-=======
         //Was it safe to remove this normalize, sorting seems not to matter, merging? Maybe we should have?
         //Do we need to unwrap here also or is that just making it worse?
         //Range and if it's transient
@@ -523,15 +515,14 @@ public class StreamSession
         List<OutgoingStream> streams = getOutgoingStreamsForRanges(unwrappedRanges, stores, pendingRepair, previewKind);
         addTransferStreams(streams);
         Set<Range<Token>> toBeUpdated = transferredRangesPerKeyspace.get(keyspace);
-        if (toBeUpdated == null)
->>>>>>> cassandra-5
-        {
+        if (toBeUpdated == null) {
             toBeUpdated = new HashSet<>();
         }
         toBeUpdated.addAll(replicas.ranges());
         transferredRangesPerKeyspace.put(keyspace, toBeUpdated);
     }
 
+  
     private void failIfFinished()
     {
         if (state().isFinalState())
@@ -556,6 +547,7 @@ public class StreamSession
         return stores;
     }
 
+ 
     @VisibleForTesting
     public List<OutgoingStream> getOutgoingStreamsForRanges(RangesAtEndpoint replicas, Collection<ColumnFamilyStore> stores, TimeUUID pendingRepair, PreviewKind previewKind)
     {
@@ -564,37 +556,7 @@ public class StreamSession
         {
             for (ColumnFamilyStore cfs: stores)
             {
-<<<<<<< HEAD
-                //if(cfStore.name.equals("globalReplicaTable")) continue; //////
-
-                final List<Range<PartitionPosition>> keyRanges = new ArrayList<>(ranges.size());
-                for (Range<Token> range : ranges)
-                    keyRanges.add(Range.makeRowRange(range));
-                refs.addAll(cfStore.selectAndReference(view -> {
-                    Set<SSTableReader> sstables = Sets.newHashSet();
-                    SSTableIntervalTree intervalTree = SSTableIntervalTree.build(view.select(SSTableSet.CANONICAL));
-                    for (Range<PartitionPosition> keyRange : keyRanges)
-                    {
-                        // keyRange excludes its start, while sstableInBounds is inclusive (of both start and end).
-                        // This is fine however, because keyRange has been created from a token range through Range.makeRowRange (see above).
-                        // And that later method uses the Token.maxKeyBound() method to creates the range, which return a "fake" key that
-                        // sort after all keys having the token. That "fake" key cannot however be equal to any real key, so that even
-                        // including keyRange.left will still exclude any key having the token of the original token range, and so we're
-                        // still actually selecting what we wanted.
-                        for (SSTableReader sstable : View.sstablesInBounds(keyRange.left, keyRange.right, intervalTree))
-                        {
-                            if (!isIncremental || !sstable.isRepaired())
-                                sstables.add(sstable);
-                        }
-                    }
-
-                    if (logger.isDebugEnabled())
-                        logger.debug("ViewFilter for {}/{} sstables", sstables.size(), Iterables.size(view.select(SSTableSet.CANONICAL)));
-                    return sstables;
-                }).refs);
-=======
                 streams.addAll(cfs.getStreamManager().createOutgoingStreams(this, replicas, pendingRepair, previewKind));
->>>>>>> cassandra-5
             }
         }
         catch (Throwable t)
@@ -604,6 +566,7 @@ public class StreamSession
         }
         return streams;
     }
+
 
     synchronized void addTransferStreams(Collection<OutgoingStream> streams)
     {
@@ -615,7 +578,7 @@ public class StreamSession
             if (task == null)
             {
                 //guarantee atomicity
-<<<<<<< HEAD
+
                 StreamTransferTask newTask = new StreamTransferTask(this, cfId);
                 task = transfers.putIfAbsent(cfId, newTask);
                 logger.debug("in new StreamTransferTask, task == null:{}", task == null);
@@ -654,18 +617,34 @@ public class StreamSession
     }
 
     public static class SSTableStreamingSections
-=======
+    {
+        return closeSession(finalState, null);
+    }
+
+    synchronized void addTransferStreams(Collection<OutgoingStream> streams)
+    {
+        failIfFinished();
+        for (OutgoingStream stream: streams)
+        {
+            TableId tableId = stream.getTableId();
+            StreamTransferTask task = transfers.get(tableId);
+            if (task == null)
+            {
+                //guarantee atomicity
+
                 StreamTransferTask newTask = new StreamTransferTask(this, tableId);
                 task = transfers.putIfAbsent(tableId, newTask);
+                logger.debug("in new StreamTransferTask, task == null:{}", task == null);
                 if (task == null)
                     task = newTask;
             }
-            task.addTransferStream(stream);
+            logger.debug("before task.addTransferFile");
+
+            task.addTransferStream(stream, migrationFlag);
         }
     }
 
     private Future<?> closeSession(State finalState)
->>>>>>> cassandra-5
     {
         return closeSession(finalState, null);
     }
@@ -789,14 +768,9 @@ public class StreamSession
             case STREAM:
                 receive((IncomingStreamMessage) message);
                 break;
-<<<<<<< HEAD
-
             case REPLICAFILE:
                 receiveReplicaFile((IncomingReplicaFileMessage) message);
                 break;
-
-=======
->>>>>>> cassandra-5
             case RECEIVED:
                 ReceivedMessage received = (ReceivedMessage) message;
                 received(received.tableId, received.sequenceNumber);
@@ -1159,6 +1133,23 @@ public class StreamSession
     }
 
     /**
+     * Call back after receiving replica file.
+     *
+     * @param message received replica file
+     */
+    public void receiveReplicaFile(IncomingReplicaFileMessage message)
+    {
+        //if message is replica file, message.ECTag == 2
+        // just send back ECBlock received message
+        logger.debug("in receiveReplicaFile, SreamSession tableId:{}, sequenceNumber:{}",message.tableId, message.sequenceNumber);
+        if (handler.isOutgoingConnected()){
+            handler.sendMessage(new ReceivedMessage(message.tableId, message.sequenceNumber));
+        }
+        if(receivers.get(message.tableId)!=null) receivers.get(message.tableId).receivedReplica();
+        logger.debug("in receiveReplicaFile, after receivers.get(tableId).receivedReplica");
+    }
+
+       /**
      * Call back after receiving a stream.
      *
      * @param message received stream
@@ -1174,33 +1165,12 @@ public class StreamSession
         StreamingMetrics.totalIncomingBytes.inc(headerSize);
         metrics.incomingBytes.inc(headerSize);
         // send back file received message
-<<<<<<< HEAD
-        handler.sendMessage(new ReceivedMessage(message.header.cfId, message.header.sequenceNumber));
-        receivers.get(message.header.cfId).received(message.sstable, message.migrationFlag);
-    }
-
-    /**
-     * Call back after receiving replica file.
-     *
-     * @param message received replica file
-     */
-    public void receiveReplicaFile(IncomingReplicaFileMessage message)
-    {
-        //if message is replica file, message.ECTag == 2
-        // just send back ECBlock received message
-        logger.debug("in receiveReplicaFile, SreamSession cfId:{}, sequenceNumber:{}",message.cfId, message.sequenceNumber);
-        if (handler.isOutgoingConnected()){
-            handler.sendMessage(new ReceivedMessage(message.cfId, message.sequenceNumber));
-        }
-        if(receivers.get(message.cfId)!=null) receivers.get(message.cfId).receivedReplica();
-        logger.debug("in receiveReplicaFile, after receivers.get(cfId).receivedReplica");
-=======
         channel.sendControlMessage(new ReceivedMessage(message.header.tableId, message.header.sequenceNumber)).syncUninterruptibly();
         StreamHook.instance.reportIncomingStream(message.header.tableId, message.stream, this, message.header.sequenceNumber);
         long receivedStartNanos = nanoTime();
         try
         {
-            receivers.get(message.header.tableId).received(message.stream);
+            receivers.get(message.header.tableId).received(message.stream, message.migrationFlag);
         }
         finally
         {
@@ -1218,7 +1188,6 @@ public class StreamSession
                                  " or set it to 0 to use system defaults.",
                                  latencyMs, message, timeout);
         }
->>>>>>> cassandra-5
     }
 
     public void progress(String filename, ProgressInfo.Direction direction, long bytes, long delta, long total)
@@ -1366,14 +1335,8 @@ public class StreamSession
     private void flushSSTables(Iterable<ColumnFamilyStore> stores)
     {
         List<Future<?>> flushes = new ArrayList<>();
-<<<<<<< HEAD
-        for (ColumnFamilyStore cfs : stores){
-            flushes.add(cfs.forceFlush());
-        }
-=======
         for (ColumnFamilyStore cfs : stores)
             flushes.add(cfs.forceFlush(ColumnFamilyStore.FlushReason.STREAMING));
->>>>>>> cassandra-5
         FBUtilities.waitOnFutures(flushes);
     }
 
@@ -1539,6 +1502,51 @@ public class StreamSession
         return boundStackTrace(e, limit, limit, visited, out);
     }
 
+
+<<<<<<< HEAD
+    public static StringBuilder boundStackTrace(Throwable e, int limit, int counter, Set<Throwable> visited, StringBuilder out)
+    {
+        if (e == null)
+            return out;
+
+        if (!visited.add(e))
+            return out.append("[CIRCULAR REFERENCE: ").append(e.getClass().getName()).append(": ").append(e.getMessage()).append("]").append('\n');
+        visited.add(e);
+
+        StackTraceElement[] stackTrace = e.getStackTrace();
+        out.append(e.getClass().getName() + ": " + e.getMessage()).append('\n');
+
+        // When dealing with the leaf, ignore how many stack traces were already written, and allow the max.
+        // This is here as the leaf tends to show where the issue started, so tends to be impactful for debugging
+        if (e.getCause() == null)
+            counter = limit;
+
+        for (int i = 0, size = Math.min(e.getStackTrace().length, limit); i < size && counter > 0; i++)
+        {            //to avoid jamming the message queue, we only send if the last one was sent
+            if (last == null || last.wasSent())
+            {
+                logger.trace("[Stream #{}] Sending keep-alive to {}.", planId(), peer);
+                //logger.debug("totalSSTablesChecked:{}, totalSSTablesView:{}",  StorageService.instance.totalSSTablesChecked, StorageService.instance.totalSSTablesView);
+                last = new KeepAliveMessage();
+                try
+                {
+                    handler.sendMessage(last);
+                }
+                catch (RuntimeException e) //connection handler is closed
+                {
+                    logger.debug("[Stream #{}] Could not send keep-alive message (perhaps stream session is finished?).", planId(), e);
+                }
+            }
+            else
+            {
+                logger.trace("[Stream #{}] Skip sending keep-alive to {} (previous was not yet sent).", planId(), peer);
+            }
+        }
+
+        boundStackTrace(e.getCause(), limit, counter, visited, out);
+        return out;
+    }
+=======
     public static StringBuilder boundStackTrace(Throwable e, int limit, int counter, Set<Throwable> visited, StringBuilder out)
     {
         if (e == null)
@@ -1558,33 +1566,13 @@ public class StreamSession
 
         for (int i = 0, size = Math.min(e.getStackTrace().length, limit); i < size && counter > 0; i++)
         {
-<<<<<<< HEAD
-            //to avoid jamming the message queue, we only send if the last one was sent
-            if (last == null || last.wasSent())
-            {
-                logger.trace("[Stream #{}] Sending keep-alive to {}.", planId(), peer);
-                //logger.debug("totalSSTablesChecked:{}, totalSSTablesView:{}",  StorageService.instance.totalSSTablesChecked, StorageService.instance.totalSSTablesView);
-                last = new KeepAliveMessage();
-                try
-                {
-                    handler.sendMessage(last);
-                }
-                catch (RuntimeException e) //connection handler is closed
-                {
-                    logger.debug("[Stream #{}] Could not send keep-alive message (perhaps stream session is finished?).", planId(), e);
-                }
-            }
-            else
-            {
-                logger.trace("[Stream #{}] Skip sending keep-alive to {} (previous was not yet sent).", planId(), peer);
-            }
-=======
             out.append('\t').append(stackTrace[i]).append('\n');
             counter--;
->>>>>>> cassandra-5
         }
 
         boundStackTrace(e.getCause(), limit, counter, visited, out);
         return out;
     }
+>>>>>>> cassandra-5
 }
+
