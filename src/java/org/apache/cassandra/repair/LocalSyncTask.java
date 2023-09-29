@@ -110,25 +110,13 @@ public class LocalSyncTask extends SyncTask implements StreamEventHandler
     @Override
     protected void startSync()
     {
-<<<<<<< HEAD
-        InetAddress local = FBUtilities.getBroadcastAddress();
-        // We can take anyone of the node as source or destination, however if one is localhost, we put at source to avoid a forwarding
-        InetAddress dst = r2.endpoint.equals(local) ? r1.endpoint : r2.endpoint;
-        InetAddress preferred = SystemKeyspace.getPreferredIP(dst);
-
-        String message = String.format("Performing streaming repair of %d ranges with %s", differences.size(), dst);
-        logger.info("[repair #{}] {}", desc.sessionId, message);
-        logger.debug("in LocalSyncTask， [repair #{}] {}", desc.sessionId, message);
-        boolean isIncremental = false;
-        if (desc.parentSessionId != null)
-=======
         if (active.get())
->>>>>>> cassandra-5
         {
             InetAddressAndPort remote = nodePair.peer;
 
             String message = String.format("Performing streaming repair of %d ranges with %s", rangesToSync.size(), remote);
             logger.info("{} {}", previewKind.logPrefix(desc.sessionId), message);
+            logger.debug("in LocalSyncTask， [repair #{}] {}", desc.sessionId, message);
             Tracing.traceRepair(message);
 
             StreamPlan plan = createStreamPlan();
