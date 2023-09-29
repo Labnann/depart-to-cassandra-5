@@ -27,18 +27,13 @@ import org.apache.cassandra.db.LivenessInfo;
 import org.apache.cassandra.db.SerializationHeader;
 import org.apache.cassandra.db.marshal.ValueAccessor;
 import org.apache.cassandra.io.util.DataInputPlus;
-<<<<<<< HEAD
-import org.apache.cassandra.utils.ByteBufferUtil;
-import org.apache.cassandra.utils.memory.AbstractAllocator;
 import org.apache.cassandra.service.StorageService;
-=======
 import org.apache.cassandra.io.util.DataOutputPlus;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.schema.ColumnMetadata;
 import org.apache.cassandra.utils.CassandraUInt;
 import org.apache.cassandra.utils.memory.ByteBufferCloner;
 import org.apache.cassandra.utils.memory.Cloner;
->>>>>>> cassandra-5
 
 /**
  * A cell is our atomic unit for a single value of a single column.
@@ -321,13 +316,9 @@ public abstract class Cell<V> extends ColumnData
             boolean useRowTTL = (flags & USE_ROW_TTL_MASK) != 0;
 
             long timestamp = useRowTimestamp ? rowLiveness.timestamp() : header.readTimestamp(in);
-<<<<<<< HEAD
             StorageService.instance.totalReadBytes+=8;////
-            int localDeletionTime = useRowTTL
-=======
 
             long localDeletionTime = useRowTTL
->>>>>>> cassandra-5
                                     ? rowLiveness.localExpirationTime()
                                     : (isDeleted || isExpiring ? header.readLocalDeletionTime(in) : NO_DELETION_TIME);
 
@@ -353,16 +344,12 @@ public abstract class Cell<V> extends ColumnData
                         value = helper.maybeClearCounterValue(value, accessor);
                 }
             }
-<<<<<<< HEAD
             StorageService.instance.totalReadBytes+=value.limit();////
-            return new BufferCell(column, timestamp, ttl, localDeletionTime, value, path);
-=======
 
             if (ttl < 0)
                 throw new IOException("Invalid TTL: " + ttl);
             localDeletionTime = decodeLocalDeletionTime(localDeletionTime, ttl, helper);
             return accessor.factory().cell(column, timestamp, ttl, localDeletionTime, value, path);
->>>>>>> cassandra-5
         }
 
         public <T> long serializedSize(Cell<T> cell, ColumnMetadata column, LivenessInfo rowLiveness, SerializationHeader header)
