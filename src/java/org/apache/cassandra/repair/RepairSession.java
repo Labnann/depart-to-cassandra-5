@@ -212,26 +212,18 @@ public class RepairSession extends AsyncFuture<RepairSessionResult> implements I
         logger.debug("after validationComplete, endpoint:{}, validating size:{}", endpoint, validating.size());
         if (task == null)
         {
-<<<<<<< HEAD
-            //assert terminated;
-=======
-            assert terminated : "The repair session should be terminated if the validation we're completing no longer exists.";
+           // assert terminated : "The repair session should be terminated if the validation we're completing no longer exists.";
             
             // The trees may be off-heap, and will therefore need to be released.
             if (trees != null)
                 trees.release();
             
->>>>>>> cassandra-5
             return;
         }
 
         String message = String.format("Received merkle tree for %s from %s", desc.columnFamily, endpoint);
-<<<<<<< HEAD
-        logger.info("[repair #{}] {}", getId(), message);
         logger.debug("[repair #{}] {}", getId(), message);
-=======
         logger.info("{} {}", previewKind.logPrefix(getId()), message);
->>>>>>> cassandra-5
         Tracing.traceRepair(message);
         task.treesReceived(trees);
     }
@@ -344,16 +336,10 @@ public class RepairSession extends AsyncFuture<RepairSessionResult> implements I
             {
                 state.phase.success();
                 // this repair session is completed
-<<<<<<< HEAD
-                logger.info("[repair #{}] {}", getId(), "Session completed successfully");
                 logger.debug("[repair #{}] {}", getId(), "Session completed successfully");
-                Tracing.traceRepair("Completed sync of range {}", ranges);
-                set(new RepairSessionResult(id, keyspace, ranges, results));
-=======
                 logger.info("{} {}", previewKind.logPrefix(getId()), "Session completed successfully");
                 Tracing.traceRepair("Completed sync of range {}", state.commonRange);
                 trySuccess(new RepairSessionResult(state.id, state.keyspace, state.commonRange.ranges, results, state.commonRange.hasSkippedReplicas));
->>>>>>> cassandra-5
 
                 taskExecutor.shutdown();
                 // mark this session as terminated
