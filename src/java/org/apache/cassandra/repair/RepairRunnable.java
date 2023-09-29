@@ -223,6 +223,10 @@ public class RepairRunnable implements Runnable, ProgressEventNotifier, RepairNo
         fireProgressEvent(jmxEvent(ProgressEventType.COMPLETE, msg));
         logger.info(state.options.getPreviewKind().logPrefix(state.id) + msg);
 
+        logger.debug("buildMTrees:{}, compareMTrees:{}, recieveWriteData:{}, recieveWriteLSM:{}", StorageService.instance.buildMTrees, StorageService.instance.compareMTrees, StorageService.instance.recieveWriteData, StorageService.instance.recieveWriteLSM);
+        
+        logger.debug("sessionCount:{}, sessionBuildMTreeTime:{}", StorageService.instance.sessionCount, StorageService.instance.sessionBuildMTreeTime);              
+
         ActiveRepairService.instance.removeParentRepairSession(state.id);
         TraceState localState = traceState;
         if (state.options.isTraced() && localState != null)
@@ -426,19 +430,7 @@ public class RepairRunnable implements Runnable, ProgressEventNotifier, RepairNo
             state.phase.repairCompleted();
             try
             {
-<<<<<<< HEAD
-                String duration = DurationFormatUtils.formatDurationWords(System.currentTimeMillis() - startTime,
-                                                                          true, true);
-                String message = String.format("Repair command #%d finished in %s", cmd, duration);
-                fireProgressEvent(tag, new ProgressEvent(ProgressEventType.COMPLETE, progress.get(), totalProgress, message));
-                logger.info(message);
-                logger.debug("buildMTrees:{}, compareMTrees:{}, recieveWriteData:{}, recieveWriteLSM:{}", StorageService.instance.buildMTrees, StorageService.instance.compareMTrees, StorageService.instance.recieveWriteData, StorageService.instance.recieveWriteLSM);
-                logger.debug("sessionCount:{}, sessionBuildMTreeTime:{}", StorageService.instance.sessionCount, StorageService.instance.sessionBuildMTreeTime);              
-                
-                if (options.isTraced() && traceState != null)
-=======
                 if (failure != null)
->>>>>>> cassandra-5
                 {
                     notifyError(failure);
                     fail(failure.getMessage());
