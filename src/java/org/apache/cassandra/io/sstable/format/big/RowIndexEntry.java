@@ -343,13 +343,8 @@ public class RowIndexEntry extends AbstractRowIndexEntry
         {
             long position = in.readUnsignedVInt();
 
-<<<<<<< HEAD:src/java/org/apache/cassandra/db/RowIndexEntry.java
-            int size = (int)in.readUnsignedVInt();
-            StorageService.instance.totalReadBytes+=8;////
-
-=======
             int size = in.readUnsignedVInt32();
->>>>>>> cassandra-5:src/java/org/apache/cassandra/io/sstable/format/big/RowIndexEntry.java
+            StorageService.instance.totalReadBytes+=8;////
             if (size == 0)
             {
                 return new RowIndexEntry(position);
@@ -357,19 +352,13 @@ public class RowIndexEntry extends AbstractRowIndexEntry
             else
             {
                 long headerLength = in.readUnsignedVInt();
-<<<<<<< HEAD:src/java/org/apache/cassandra/db/RowIndexEntry.java
-                DeletionTime deletionTime = DeletionTime.serializer.deserialize(in);
-                int columnsIndexCount = (int) in.readUnsignedVInt();
-                StorageService.instance.totalReadBytes+=8;////
-                int indexedPartSize = size - serializedSize(deletionTime, headerLength, columnsIndexCount);
-=======
                 DeletionTime deletionTime = DeletionTime.getSerializer(version).deserialize(in);
                 int columnsIndexCount = in.readUnsignedVInt32();
+                int columnsIndexCount = (int) in.readUnsignedVInt();
 
                 checkSize(columnsIndexCount, size);
 
                 int indexedPartSize = size - serializedSize(deletionTime, headerLength, columnsIndexCount, version);
->>>>>>> cassandra-5:src/java/org/apache/cassandra/io/sstable/format/big/RowIndexEntry.java
 
                 if (size <= DatabaseDescriptor.getColumnIndexCacheSize())
                 {
@@ -545,22 +534,12 @@ public class RowIndexEntry extends AbstractRowIndexEntry
             for (int i = 0; i < columnsIndexCount; i++)
                 this.columnsIndex[i] = idxInfoSerializer.deserialize(in);
 
-<<<<<<< HEAD:src/java/org/apache/cassandra/db/RowIndexEntry.java
-            int[] offsets = null;
-            if (version.storeRows())
-            {
-                offsets = new int[this.columnsIndex.length];
-                for (int i = 0; i < offsets.length; i++){
-                    offsets[i] = in.readInt();
-                    StorageService.instance.totalReadBytes+=4;////
-                }
-            }
-            this.offsets = offsets;
-=======
+
             this.offsets = new int[this.columnsIndex.length];
-            for (int i = 0; i < offsets.length; i++)
+            for (int i = 0; i < offsets.length; i++){
                 offsets[i] = in.readInt();
->>>>>>> cassandra-5:src/java/org/apache/cassandra/io/sstable/format/big/RowIndexEntry.java
+                StorageService.instance.totalReadBytes+=4;////
+            }
 
             this.indexedPartSize = indexedPartSize;
 
