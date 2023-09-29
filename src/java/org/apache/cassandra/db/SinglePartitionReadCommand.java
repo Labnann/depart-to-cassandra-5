@@ -80,7 +80,6 @@ import org.apache.cassandra.tracing.Tracing;
 import org.apache.cassandra.utils.FBUtilities;
 import org.apache.cassandra.utils.btree.BTreeSet;
 
-<<<<<<< HEAD
 import java.net.InetAddress;
 import org.apache.cassandra.gms.Gossiper;
 import org.apache.cassandra.dht.Token;
@@ -97,8 +96,6 @@ import org.iq80.twoLayerLog.ReadOptions;
 import org.iq80.twoLayerLog.WriteOptions;
 import org.iq80.twoLayerLog.impl.DbImpl;
 
-=======
->>>>>>> cassandra-5
 /**
  * A read command that selects a (part of a) single partition.
  */
@@ -205,9 +202,6 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
                       limits,
                       partitionKey,
                       clusteringIndexFilter,
-<<<<<<< HEAD
-                      findIndex(metadata, rowFilter, partitionKey));
-=======
                       indexQueryPlan,
                       false);
     }
@@ -240,8 +234,7 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
                       limits,
                       partitionKey,
                       clusteringIndexFilter,
-                      findIndexQueryPlan(metadata, rowFilter));
->>>>>>> cassandra-5
+                      findIndexQueryPlan(metadata, rowFilter, partitionKey));
     }
 
     /**
@@ -517,15 +510,13 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
         UnfilteredRowIterator partition = cfs.isRowCacheEnabled() && !executionController.isTrackingRepairedStatus()
                                         ? getThroughCache(cfs, executionController)
                                         : queryMemtableAndDisk(cfs, executionController);
-<<<<<<< HEAD
-        
-        return new SingletonUnfilteredPartitionIterator(partition, isForThrift());
+        return new SingletonUnfilteredPartitionIterator(partition);
     }
-
+        
     @SuppressWarnings("resource") // we close the created iterator through closing the result of this method (and SingletonUnfilteredPartitionIterator ctor cannot fail)
     protected UnfilteredPartitionIterator queryStorage(final ColumnFamilyStore cfs, ReadExecutionController executionController, int []findResults, String ksName)
     {
-        UnfilteredRowIterator partition = cfs.isRowCacheEnabled()
+        UnfilteredRowIterator partition = cfs.isRowCacheEnabled() && !executionController.isTrackingRepairedStatus()
                                         ? getThroughCache(cfs, executionController)
                                         : queryMemtableAndDisk(cfs, executionController);
         
@@ -533,7 +524,7 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
             findResults[0] = 0;
             //logger.debug("####read in queryStorage empty, key token:{}", this.partitionKey().getToken());
         }
-        return new SingletonUnfilteredPartitionIterator(partition, isForThrift());
+        return new SingletonUnfilteredPartitionIterator(partition);
     }
 
     @SuppressWarnings("resource") // we close the created iterator through closing the result of this method (and SingletonUnfilteredPartitionIterator ctor cannot fail)
@@ -598,10 +589,7 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
             //}
 //StorageService.instance.db.mutex.unlock();
 
-        return new SingletonUnfilteredPartitionIterator(partition, isForThrift());
-=======
         return new SingletonUnfilteredPartitionIterator(partition);
->>>>>>> cassandra-5
     }
 
     /**
@@ -619,13 +607,8 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
         assert !cfs.isIndex(); // CASSANDRA-5732
         assert cfs.isRowCacheEnabled() : String.format("Row cache is not enabled on table [%s]", cfs.name);
 
-<<<<<<< HEAD
         long startCache = System.currentTimeMillis();
-
-        RowCacheKey key = new RowCacheKey(metadata().ksAndCFName, partitionKey());
-=======
         RowCacheKey key = new RowCacheKey(metadata(), partitionKey());
->>>>>>> cassandra-5
 
         // Attempt a sentinel-read-cache sequence.  if a write invalidates our sentinel, we'll return our
         // (now potentially obsolete) data, but won't cache it. see CASSANDRA-3862
@@ -785,20 +768,10 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
         return queryMemtableAndDiskInternal(cfs, executionController);
     }
 
-<<<<<<< HEAD
-    @Override
-    protected int oldestUnrepairedTombstone()
-    {
-        return oldestUnrepairedTombstone;
-    }
 
-    private UnfilteredRowIterator queryMemtableAndDiskInternal(ColumnFamilyStore cfs)
-    {     
-        StorageService.instance.readCommandNum++;
-=======
     private UnfilteredRowIterator queryMemtableAndDiskInternal(ColumnFamilyStore cfs, ReadExecutionController controller)
     {
->>>>>>> cassandra-5
+        StorageService.instance.readCommandNum++;
         /*
          * We have 2 main strategies:
          *   1) We query memtables and sstables simulateneously. This is our most generic strategy and the one we use
@@ -833,13 +806,11 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
         InputCollector<UnfilteredRowIterator> inputCollector = iteratorsForPartition(view, controller);
         try
         {
-<<<<<<< HEAD
             logger.debug("--in queryMemtableAndDiskInternal, partitionKey token:{}, partitionKey:{}", partitionKey().getToken(), partitionKey());
             long startMem = System.currentTimeMillis();
-=======
+
             SSTableReadMetricsCollector metricsCollector = new SSTableReadMetricsCollector();
 
->>>>>>> cassandra-5
             for (Memtable memtable : view.memtables)
             {
                 @SuppressWarnings("resource") // 'iter' is added to iterators which is closed on exception, or through the closing of the final merged iterator
@@ -872,17 +843,12 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
             */
             view.sstables.sort(SSTableReader.maxTimestampDescending);
             int nonIntersectingSSTables = 0;
-<<<<<<< HEAD
-            List<SSTableReader> skippedSSTablesWithTombstones = null;
-            SSTableReadMetricsCollector metricsCollector = new SSTableReadMetricsCollector();
             int checkedSSTableNum = 0;
-=======
             int includedDueToTombstones = 0;
 
             if (controller.isTrackingRepairedStatus())
                 Tracing.trace("Collecting data from sstables and tracking repaired status");
 
->>>>>>> cassandra-5
             for (SSTableReader sstable : view.sstables)
             {
                 // if we've already seen a partition tombstone with a timestamp greater
@@ -906,38 +872,12 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
                     continue;
                 }
 
-<<<<<<< HEAD
-                minTimestamp = Math.min(minTimestamp, sstable.getMinTimestamp());
-
-                @SuppressWarnings("resource") // 'iter' is added to iterators which is closed on exception,
-                                              // or through the closing of the final merged iterator
-                UnfilteredRowIteratorWithLowerBound iter = makeIterator(cfs, sstable, true, metricsCollector);
-                if (!sstable.isRepaired())
-                    oldestUnrepairedTombstone = Math.min(oldestUnrepairedTombstone, sstable.getMinLocalDeletionTime());
-
-                iterators.add(iter);
-                checkedSSTableNum++;
-                mostRecentPartitionTombstone = Math.max(mostRecentPartitionTombstone,
-                                                        iter.partitionLevelDeletion().markedForDeleteAt());
-            }
-
-            int includedDueToTombstones = 0;
-            // Check for sstables with tombstones that are not expired
-            if (skippedSSTablesWithTombstones != null)
-            {
-                for (SSTableReader sstable : skippedSSTablesWithTombstones)
-=======
                 if (intersects || hasRequiredStatics)
->>>>>>> cassandra-5
                 {
                     if (!sstable.isRepaired())
                         controller.updateMinOldestUnrepairedTombstone(sstable.getMinLocalDeletionTime());
 
-<<<<<<< HEAD
-                    iterators.add(iter);
                     checkedSSTableNum++;
-                    includedDueToTombstones++;
-=======
                     // 'iter' is added to iterators which is closed on exception, or through the closing of the final merged iterator
                     @SuppressWarnings("resource")
                     UnfilteredRowIterator iter = intersects ? makeRowIteratorWithLowerBound(cfs, sstable, metricsCollector)
@@ -975,24 +915,18 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
                     {
                         iter.close();
                     }
->>>>>>> cassandra-5
                 }
             }
 
             if (Tracing.isTracing())
                 Tracing.trace("Skipped {}/{} non-slice-intersecting sstables, included {} due to tombstones",
                                nonIntersectingSSTables, view.sstables.size(), includedDueToTombstones);
-<<<<<<< HEAD
+
             StorageService.instance.totalSSTablesChecked+=checkedSSTableNum;
             StorageService.instance.totalSSTablesView+=view.sstables.size();
             //logger.debug("------in queryMemtableAndDiskInternal:{}, totalSSTablesChecked:{}, checkedSSTableNum:{}", StorageService.instance.totalSSTablesChecked, checkedSSTableNum);   
-            if (iterators.isEmpty())
-                return EmptyIterators.unfilteredRow(cfs.metadata, partitionKey(), filter.isReversed());
-=======
-
             if (inputCollector.isEmpty())
                 return EmptyIterators.unfilteredRow(cfs.metadata(), partitionKey(), filter.isReversed());
->>>>>>> cassandra-5
 
             StorageHook.instance.reportRead(cfs.metadata().id, partitionKey());
 
@@ -1140,11 +1074,7 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
         /* add the SSTables on disk */
         view.sstables.sort(SSTableReader.maxTimestampDescending);
         // read sorted sstables
-<<<<<<< HEAD
-        SSTableReadMetricsCollector metricsCollector = new SSTableReadMetricsCollector();
         int checkedSSTableNum = 0;
-=======
->>>>>>> cassandra-5
         for (SSTableReader sstable : view.sstables)
         {
             // if we've already seen a partition tombstone with a timestamp greater
@@ -1206,24 +1136,12 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
                 if (iter.isEmpty())
                     continue;
 
-<<<<<<< HEAD
-                if (sstable.isRepaired())
-                    onlyUnrepaired = false;
-
-                result = add(
-                    RTBoundValidator.validate(isForThrift() ? ThriftResultsMerger.maybeWrap(iter, nowInSec()) : iter, RTBoundValidator.Stage.SSTABLE, false),
-                    result,
-                    filter,
-                    sstable.isRepaired()
-                );
                 checkedSSTableNum++;
-=======
                 result = add(RTBoundValidator.validate(iter, RTBoundValidator.Stage.SSTABLE, false),
                              result,
                              filter,
                              sstable.isRepaired(),
                              controller);
->>>>>>> cassandra-5
             }
         }
 
