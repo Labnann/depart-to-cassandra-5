@@ -32,14 +32,11 @@ import org.apache.cassandra.repair.state.ParticipateState;
 import org.apache.cassandra.repair.state.ValidationState;
 import org.apache.cassandra.schema.TableId;
 import org.apache.cassandra.service.ActiveRepairService;
-<<<<<<< HEAD
 import org.apache.cassandra.service.StorageService;
-=======
 import org.apache.cassandra.streaming.PreviewKind;
 import org.apache.cassandra.utils.TimeUUID;
 
 import static org.apache.cassandra.net.Verb.VALIDATION_RSP;
->>>>>>> cassandra-5
 
 /**
  * Handles all repair related message.
