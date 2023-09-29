@@ -54,9 +54,7 @@ import org.apache.cassandra.tracing.Tracing;
 import org.apache.cassandra.utils.FBUtilities;
 import org.apache.cassandra.utils.MerkleTrees;
 import org.apache.cassandra.utils.Pair;
-<<<<<<< HEAD
 import org.apache.cassandra.service.StorageService;
-=======
 import org.apache.cassandra.utils.concurrent.Future;
 import org.apache.cassandra.utils.concurrent.FutureCombiner;
 import org.apache.cassandra.utils.concurrent.ImmediateFuture;
@@ -64,7 +62,6 @@ import org.apache.cassandra.utils.concurrent.ImmediateFuture;
 import static org.apache.cassandra.config.DatabaseDescriptor.paxosRepairEnabled;
 import static org.apache.cassandra.service.paxos.Paxos.useV2;
 import static org.apache.cassandra.utils.Clock.Global.currentTimeMillis;
->>>>>>> cassandra-5
 
 /**
  * RepairJob runs repair on given ColumnFamily.
@@ -120,13 +117,8 @@ public class RepairJob extends AsyncFuture<RepairResult> implements Runnable
      */
     public void run()
     {
-<<<<<<< HEAD
         StorageService.instance.beginMTrees = System.currentTimeMillis();//////
         StorageService.instance.maxTime = 0;//////
-
-        List<InetAddress> allEndpoints = new ArrayList<>(session.endpoints);
-        allEndpoints.add(FBUtilities.getBroadcastAddress());
-=======
         state.phase.start();
         Keyspace ks = Keyspace.open(desc.keyspace);
         ColumnFamilyStore cfs = ks.getColumnFamilyStore(desc.columnFamily);
@@ -218,49 +210,7 @@ public class RepairJob extends AsyncFuture<RepairResult> implements Runnable
         });
 
         // When all validations complete, submit sync tasks
-<<<<<<< HEAD
-        ListenableFuture<List<SyncStat>> syncResults = Futures.transform(validations, new AsyncFunction<List<TreeResponse>, List<SyncStat>>()
-        {
-            public ListenableFuture<List<SyncStat>> apply(List<TreeResponse> trees)
-            {
-                 ///////////////////////
-                //StorageService.instance.buildMTrees+=StorageService.instance.maxTime;
-                StorageService.instance.sessionBuildMTreeTime[StorageService.instance.sessionCount++]=StorageService.instance.maxTime;
-                logger.debug("sessionCount:{}, maxTime:{}, buildMTrees:{}, trees.size:{}", StorageService.instance.sessionCount, StorageService.instance.maxTime, StorageService.instance.buildMTrees, trees.size());              
-                //////////////////////////
-
-                InetAddress local = FBUtilities.getLocalAddress();
-
-                List<SyncTask> syncTasks = new ArrayList<>();
-                // We need to difference all trees one against another
-                for (int i = 0; i < trees.size() - 1; ++i)
-                {
-                    TreeResponse r1 = trees.get(i);
-                    for (int j = i + 1; j < trees.size(); ++j)
-                    {
-                        TreeResponse r2 = trees.get(j);
-                        SyncTask task;
-                        if (r1.endpoint.equals(local) || r2.endpoint.equals(local))
-                        {
-                            task = new LocalSyncTask(desc, r1, r2, repairedAt, session.pullRepair);
-                        }
-                        else
-                        {
-                            task = new RemoteSyncTask(desc, r1, r2);
-                            // RemoteSyncTask expects SyncComplete message sent back.
-                            // Register task to RepairSession to receive response.
-                            session.waitForSync(Pair.create(desc, new NodePair(r1.endpoint, r2.endpoint)), (RemoteSyncTask) task);
-                        }
-                        syncTasks.add(task);
-                        taskExecutor.submit(task);
-                    }
-                }
-                return Futures.allAsList(syncTasks);
-            }
-        }, taskExecutor);
-=======
         Future<List<SyncStat>> syncResults = treeResponses.flatMap(session.optimiseStreams && !session.pullRepair ? this::optimisedSyncing : this::standardSyncing, taskExecutor);
->>>>>>> cassandra-5
 
         // When all sync complete, set the final result
         syncResults.addCallback(new FutureCallback<List<SyncStat>>()
@@ -329,6 +279,12 @@ public class RepairJob extends AsyncFuture<RepairResult> implements Runnable
                                                   PreviewKind previewKind)
     {
         long startedAt = currentTimeMillis();
+        ///////////////////////
+        //StorageService.instance.buildMTrees+=StorageService.instance.maxTime;
+        StorageService.instance.sessionBuildMTreeTime[StorageService.instance.sessionCount++]=StorageService.instance.maxTime;
+        logger.debug("sessionCount:{}, maxTime:{}, buildMTrees:{}, trees.size:{}", StorageService.instance.sessionCount, StorageService.instance.maxTime, StorageService.instance.buildMTrees, trees.size());              
+         //////////////////////////
+
         List<SyncTask> syncTasks = new ArrayList<>();
         // We need to difference all trees one against another
         for (int i = 0; i < trees.size() - 1; ++i)
