@@ -216,7 +216,6 @@ public class StreamCoordinator
         }
     }
 
-<<<<<<< HEAD
     public synchronized void transferReplicaFile(InetAddress to, ByteBuffer replicaFile)
     {
         HostStreamingData sessionList = getOrCreateHostData(to);
@@ -224,10 +223,7 @@ public class StreamCoordinator
         //session.addTransferReplicaFile(replicaFile);
     }
 
-    private List<List<StreamSession.SSTableStreamingSections>> sliceSSTableDetails(Collection<StreamSession.SSTableStreamingSections> sstableDetails)
-=======
     private List<Collection<OutgoingStream>> bucketStreams(Collection<OutgoingStream> streams)
->>>>>>> cassandra-5
     {
         // There's no point in divvying things up into more buckets than we have sstableDetails
         int targetSlices = Math.min(streams.size(), connectionsPerHost);
