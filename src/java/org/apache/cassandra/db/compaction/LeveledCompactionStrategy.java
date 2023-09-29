@@ -41,15 +41,9 @@ import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.io.sstable.ISSTableScanner;
 import org.apache.cassandra.io.sstable.format.SSTableReader;
-<<<<<<< HEAD
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.JsonNodeFactory;
-import org.codehaus.jackson.node.ObjectNode;
 import org.apache.cassandra.service.StorageService;
-=======
 
 import static org.apache.cassandra.config.CassandraRelevantProperties.TOLERATE_SSTABLE_SIZE;
->>>>>>> cassandra-5
 
 public class LeveledCompactionStrategy extends AbstractCompactionStrategy
 {
@@ -180,18 +174,13 @@ public class LeveledCompactionStrategy extends AbstractCompactionStrategy
             LifecycleTransaction txn = cfs.getTracker().tryModify(candidate.sstables, OperationType.COMPACTION);
             if (txn != null)
             {
-<<<<<<< HEAD
-                LeveledCompactionTask newTask = new LeveledCompactionTask(cfs, txn, candidate.level, gcBefore, candidate.maxSSTableBytes, false);
-                logger.debug("in getNextBackgroundTask, cfs.name:{}, candidate.level:{}", cfs.name, candidate.level);
-                newTask.setOutputLevel(candidate.level);//////
-=======
                 AbstractCompactionTask newTask;
                 if (!singleSSTableUplevel || op == OperationType.TOMBSTONE_COMPACTION || txn.originals().size() > 1)
                     newTask = new LeveledCompactionTask(cfs, txn, candidate.level, gcBefore, candidate.maxSSTableBytes, false);
                 else
                     newTask = new SingleSSTableLCSTask(cfs, txn, candidate.level);
-
->>>>>>> cassandra-5
+                logger.debug("in getNextBackgroundTask, cfs.name:{}, candidate.level:{}", cfs.name, candidate.level);
+                newTask.setOutputLevel(candidate.level);//////
                 newTask.setCompactionType(op);
                 StorageService.instance.minSplitSSTableNum = 20;//////
                 StorageService.instance.splitSSTableNum = 20;//////
