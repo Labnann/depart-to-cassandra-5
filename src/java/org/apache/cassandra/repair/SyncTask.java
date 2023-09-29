@@ -36,13 +36,10 @@ import org.apache.cassandra.repair.messages.RepairMessage;
 import org.apache.cassandra.repair.messages.SyncRequest;
 import org.apache.cassandra.streaming.PreviewKind;
 import org.apache.cassandra.tracing.Tracing;
-<<<<<<< HEAD
 import org.apache.cassandra.utils.MerkleTrees;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.FBUtilities;
 import java.net.InetAddress;
-=======
->>>>>>> cassandra-5
 
 import static org.apache.cassandra.utils.Clock.Global.currentTimeMillis;
 import static org.apache.cassandra.net.Verb.SYNC_REQ;
@@ -82,36 +79,23 @@ public abstract class SyncTask extends AsyncFuture<SyncStat> implements Runnable
      */
     public final void run()
     {
-<<<<<<< HEAD
         long beginTime = System.currentTimeMillis();//////
         InetAddress LOCAL = FBUtilities.getBroadcastAddress();
 
         //if (!r1.endpoint.equals(LOCAL) && !r2.endpoint.equals(LOCAL)) return;////////////////////////////////////
         // compare trees, and collect differences
-        List<Range<Token>> differences = MerkleTrees.difference(r1.trees, r2.trees);
-=======
         startTime = currentTimeMillis();
->>>>>>> cassandra-5
 
 
         // choose a repair method based on the significance of the difference
-<<<<<<< HEAD
-        String format = String.format("[repair #%s] Endpoints %s and %s %%s for %s", desc.sessionId, r1.endpoint, r2.endpoint, desc.columnFamily);
-        //if (differences.isEmpty())
-        if (differences.isEmpty() || (!r1.endpoint.equals(LOCAL) && !r2.endpoint.equals(LOCAL)))//////////////////////////////////////////////////////////////////////
+
+        String format = String.format("%s Endpoints %s and %s %%s for %s", previewKind.logPrefix(desc.sessionId), nodePair.coordinator, nodePair.peer, desc.columnFamily);
+        if (rangesToSync.isEmpty() || !nodePair.coordinator.equals(LOCAL) && !nodePair.peer.equals(LOCAL) )
         {
             logger.info(String.format(format, "are consistent"));
             logger.debug(String.format(format, "are consistent"));
-            Tracing.traceRepair("Endpoint {} is consistent with {} for {}", r1.endpoint, r2.endpoint, desc.columnFamily);
-            set(stat);
-=======
-        String format = String.format("%s Endpoints %s and %s %%s for %s", previewKind.logPrefix(desc.sessionId), nodePair.coordinator, nodePair.peer, desc.columnFamily);
-        if (rangesToSync.isEmpty())
-        {
-            logger.info(String.format(format, "are consistent"));
             Tracing.traceRepair("Endpoint {} is consistent with {} for {}", nodePair.coordinator, nodePair.peer, desc.columnFamily);
             trySuccess(stat);
->>>>>>> cassandra-5
             return;
         }
         /////////////////////////////////////
@@ -119,20 +103,15 @@ public abstract class SyncTask extends AsyncFuture<SyncStat> implements Runnable
         //if (r2.endpoint.equals(LOCAL)) StorageService.instance.repairNodeIP = r1.endpoint;
         ///////////////////////////////////////
         // non-0 difference: perform streaming repair
-<<<<<<< HEAD
-        logger.info(String.format(format, "have " + differences.size() + " range(s) out of sync"));
-        logger.debug(String.format(format, "have " + differences.size() + " range(s) out of sync"));
-        Tracing.traceRepair("Endpoint {} has {} range(s) out of sync with {} for {}", r1.endpoint, differences.size(), r2.endpoint, desc.columnFamily);
-        
+        logger.info(String.format(format, "have " + rangesToSync.size() + " range(s) out of sync"));
+        logger.debug(String.format(format, "have " + rangesToSync.size() + " range(s) out of sync"));
+        Tracing.traceRepair("Endpoint {} has {} range(s) out of sync with {} for {}", nodePair.coordinator, rangesToSync.size(), nodePair.peer, desc.columnFamily);
+
         long endTime = System.currentTimeMillis();
         StorageService.instance.compareMTrees+= endTime-beginTime;
 
-        startSync(differences);
-=======
-        logger.info(String.format(format, "have " + rangesToSync.size() + " range(s) out of sync"));
-        Tracing.traceRepair("Endpoint {} has {} range(s) out of sync with {} for {}", nodePair.coordinator, rangesToSync.size(), nodePair.peer, desc.columnFamily);
+
         startSync();
->>>>>>> cassandra-5
     }
 
     public boolean isLocal()
