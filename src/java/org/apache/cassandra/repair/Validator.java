@@ -105,15 +105,11 @@ public class Validator implements Runnable
         this.evenTreeDistribution = evenTreeDistribution;
     }
 
-<<<<<<< HEAD
     public long getValidated(){
         return validated;
     }
 
-    public void prepare(ColumnFamilyStore cfs, MerkleTrees tree)
-=======
     public void prepare(ColumnFamilyStore cfs, MerkleTrees trees, TopPartitionTracker.Collector topPartitionCollector)
->>>>>>> cassandra-5
     {
         this.trees = trees;
         this.topPartitionCollector = topPartitionCollector;
