@@ -123,18 +123,13 @@ public class ReadExecutionController implements AutoCloseable
     @SuppressWarnings("resource") // ops closed during controller close
     static ReadExecutionController forCommand(ReadCommand command, boolean trackRepairedStatus)
     {
-<<<<<<< HEAD
         //ColumnFamilyStore baseCfs = Keyspace.openAndGetStore(command.metadata());
         //ColumnFamilyStore indexCfs = maybeGetIndexCfs(baseCfs, command);
 
         ColumnFamilyStore baseCfs = command.getColumnFamilyStorefromMultiReplicas(command.metadata());
-        ColumnFamilyStore indexCfs = maybeGetIndexCfs(baseCfs, command);
-=======
-        ColumnFamilyStore baseCfs = Keyspace.openAndGetStore(command.metadata());
         ColumnFamilyStore indexCfs = maybeGetIndexCfs(command);
 
         long createdAtNanos = baseCfs.metric.topLocalReadQueryTime.isEnabled() ? clock.now() : NO_SAMPLING;
->>>>>>> cassandra-5
 
         if (indexCfs == null)
             return new ReadExecutionController(command, baseCfs.readOrdering.start(), baseCfs.metadata(), null, null, createdAtNanos, trackRepairedStatus);
