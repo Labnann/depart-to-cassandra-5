@@ -64,6 +64,19 @@ public class ValidationManager
         long availableBytes = (DatabaseDescriptor.getRepairSessionSpaceInMiB() * 1048576) /
                               cfs.keyspace.getReplicationStrategy().getReplicationFactor().allReplicas;
 
+
+        //InetAddress LOCAL = FBUtilities.getBroadcastAddress();
+        for (Range<Token> range : ranges)
+        {
+            long numPartitions = 0;
+            for (SSTableReader sstable : sstables)
+                numPartitions += sstable.estimatedKeysForRanges(Collections.singleton(range));
+            logger.debug("in createMerkleTrees, numPartitions:{}, allPartitions:{}", numPartitions, allPartitions);
+            //logger.debug("before rangePartitionCounts.put, range.left:{}, range.right:{}, numPartitions:{}", range.left, range.right, numPartitions);
+        }
+        logger.debug("in createMerkleTrees, allPartitions:{}", allPartitions);
+
+
         for (Range<Token> range : ranges)
         {
             long numPartitions = rangePartitionCounts.get(range);
@@ -89,6 +102,54 @@ public class ValidationManager
 
         return trees;
     }
+
+
+        private static MerkleTrees createMerkleTreesForReplica(Collection<Range<Token>> ranges, ColumnFamilyStore cfs)
+    {
+        MerkleTrees tree = new MerkleTrees(cfs.getPartitioner());
+        long allPartitions = 0;
+        Map<Range<Token>, Long> rangePartitionCounts = Maps.newHashMapWithExpectedSize(ranges.size());
+        InetAddress LOCAL = FBUtilities.getBroadcastAddress();
+        for (Range<Token> range : ranges)
+        {
+            long numPartitions = 0;
+            /////////////////////////////////////////
+            List<InetAddress> ep = StorageService.instance.getNaturalEndpoints(cfs.keyspace.getName(), range.right);
+            if (!ep.get(0).equals(LOCAL)) {//the range is stored in replica copy
+                byte ip[] = ep.get(0).getAddress();  
+                int NodeID = (int)ip[3];
+                Token rightBound = StorageService.instance.getBoundToken(range.right);
+                int rangeGroupRowNumber = StorageService.instance.getRangeGroupRowNumber(NodeID, rightBound);
+                numPartitions += rangeGroupRowNumber;
+                logger.debug("in createMerkleTreesForReplica, NodeID:{}, range.left:{}, range.right:{}, rightBound:{}, rangeGroupRowNumber:{}, allPartitions:{}", NodeID, range.left, range.right, rightBound, rangeGroupRowNumber, allPartitions);
+
+            }
+            //logger.debug("before rangePartitionCounts.put, range.left:{}, range.right:{}, numPartitions:{}", range.left, range.right, numPartitions);
+            rangePartitionCounts.put(range, numPartitions);
+            allPartitions += numPartitions;
+        }
+        logger.debug("in createMerkleTreesForReplica, allPartitions:{}", allPartitions);
+
+        for (Range<Token> range : ranges)
+        {
+            long numPartitions = rangePartitionCounts.get(range);
+            double rangeOwningRatio = allPartitions > 0 ? (double)numPartitions / allPartitions : 0;
+            // determine max tree depth proportional to range size to avoid blowing up memory with multiple tress,
+            // capping at 20 to prevent large tree (CASSANDRA-11390)
+            int maxDepth = rangeOwningRatio > 0 ? (int) Math.floor(20 - Math.log(1 / rangeOwningRatio) / Math.log(2)) : 0;
+            // determine tree depth from number of partitions, capping at max tree depth (CASSANDRA-5263)
+            int depth = numPartitions > 0 ? (int) Math.min(Math.ceil(Math.log(numPartitions) / Math.log(2)), maxDepth) : 0;
+            tree.addMerkleTree((int) Math.pow(2, depth), range);
+        }
+        if (logger.isDebugEnabled())
+        {
+            // MT serialize may take time
+            logger.debug("Created {} merkle trees with merkle trees size {}, {} partitions, {} bytes", tree.ranges().size(), tree.size(), allPartitions, MerkleTrees.serializer.serializedSize(tree, 0));
+        }
+
+        return tree;
+    }
+
 
     private static ValidationPartitionIterator getValidationIterator(TableRepairManager repairManager, Validator validator, TopPartitionTracker.Collector topPartitionCollector) throws IOException, NoSuchRepairSessionException
     {
