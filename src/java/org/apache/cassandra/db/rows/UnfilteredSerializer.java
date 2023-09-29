@@ -583,11 +583,8 @@ public class UnfilteredSerializer
             {
                 long rowSize = in.readUnsignedVInt();
                 in.readUnsignedVInt(); // previous unfiltered size
-<<<<<<< HEAD
                 StorageService.instance.totalReadBytes+=8;////
-=======
                 in = new TrackedDataInputPlus(in, rowSize);
->>>>>>> cassandra-5
             }
 
             LivenessInfo rowLiveness = LivenessInfo.EMPTY;
@@ -682,12 +679,8 @@ public class UnfilteredSerializer
                     builder.addComplexDeletion(column, complexDeletion);
             }
 
-<<<<<<< HEAD
-            int count = (int) in.readUnsignedVInt();
             StorageService.instance.totalReadBytes+=4;////
-=======
             int count = in.readUnsignedVInt32();
->>>>>>> cassandra-5
             while (--count >= 0)
             {
                 Cell<byte[]> cell = Cell.serializer.deserialize(in, rowLiveness, column, header, helper, ByteArrayAccessor.instance);
