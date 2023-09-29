@@ -52,6 +52,9 @@ import org.apache.cassandra.streaming.StreamSession;
 import org.apache.cassandra.utils.CloseableIterator;
 import org.apache.cassandra.utils.Throwables;
 import org.apache.cassandra.utils.concurrent.Refs;
+import org.apache.cassandra.service.StorageService;
+import org.apache.cassandra.io.sstable.Descriptor;
+import org.apache.cassandra.io.sstable.SSTable;
 
 import static org.apache.cassandra.config.CassandraRelevantProperties.REPAIR_MUTATION_REPAIR_ROWS_PER_BATCH;
 
@@ -237,8 +240,17 @@ public class CassandraStreamReceiver implements StreamReceiver
         boolean requiresWritePath = requiresWritePath(cfs);
         Collection<SSTableReader> readers = sstables;
 
+      if (readers != null && readers.size() > 0) {
+
         try (Refs<SSTableReader> refs = Refs.ref(readers))
         {
+            Collection<Descriptor> migratedReadersDes = new ArrayList();
+            for(SSTableReader reader : readers){
+                migratedReadersDes.add(reader.descriptor);
+            }
+            StorageService.instance.replayMigratedSSTablesDes.put(migratedReadersDes);
+            StorageService.instance.migartedCFS = cfs;
+
             if (requiresWritePath)
             {
                 sendThroughWritePath(cfs, readers);
@@ -285,6 +297,9 @@ public class CassandraStreamReceiver implements StreamReceiver
                 }
             }
         }
+      } else {
+          finishTransaction();
+      }
     }
 
     @Override
