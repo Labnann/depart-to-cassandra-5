@@ -78,13 +78,9 @@ import org.apache.cassandra.notifications.SSTableRepairStatusChanged;
 import org.apache.cassandra.repair.consistent.admin.CleanupSummary;
 import org.apache.cassandra.schema.CompactionParams;
 import org.apache.cassandra.service.ActiveRepairService;
-<<<<<<< HEAD
 import org.apache.cassandra.service.StorageService;
-=======
 import org.apache.cassandra.utils.TimeUUID;
-
 import static org.apache.cassandra.db.compaction.AbstractStrategyHolder.GroupedSSTableContainer;
->>>>>>> cassandra-5
 
 /**
  * Manages the compaction strategies.
@@ -604,13 +600,7 @@ public class CompactionStrategyManager implements INotificationConsumer
 
     private Iterable<AbstractCompactionStrategy> getAllStrategies()
     {
-<<<<<<< HEAD
-        cfs.getTracker().replaceFlushed(memtable, sstables);
-        if (sstables != null && !sstables.isEmpty() && StorageService.instance.FlushTriggeredCompaction && !cfs.name.equals("globalReplicaTable")) //////
-            CompactionManager.instance.submitBackground(cfs);
-=======
         return Iterables.concat(Iterables.transform(holders, AbstractStrategyHolder::allStrategies));
->>>>>>> cassandra-5
     }
 
     public int getUnleveledSSTables()

@@ -1845,7 +1845,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean, Memtable.Owner
     void replaceFlushed(Memtable memtable, Collection<SSTableReader> sstables)
     {
         data.replaceFlushed(memtable, sstables);
-        if (sstables != null && !sstables.isEmpty())
+        if (sstables != null && !sstables.isEmpty() && StorageService.instance.FlushTriggeredCompaction && !cfs.name.equals("globalReplicaTable")) //////
             CompactionManager.instance.submitBackground(this);
     }
 

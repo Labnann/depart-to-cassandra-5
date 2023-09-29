@@ -234,26 +234,8 @@ public abstract class AbstractCompactionStrategy
     /**
      * Filters SSTables that are to be excluded from the given collection
      *
-<<<<<<< HEAD
-     * @param memtable the flushed memtable
-     * @param sstables the written sstables. can be null or empty if the memtable was clean.
-     */
-    public void replaceFlushed(Memtable memtable, Collection<SSTableReader> sstables)
-    {
-        cfs.getTracker().replaceFlushed(memtable, sstables);
-        if (sstables != null && !sstables.isEmpty() && StorageService.instance.FlushTriggeredCompaction && !cfs.name.equals("globalReplicaTable")) //////
-            CompactionManager.instance.submitBackground(cfs);
-    }
-
-    /**
-     * Filters SSTables that are to be blacklisted from the given collection
-     *
-     * @param originalCandidates The collection to check for blacklisted SSTables
-     * @return list of the SSTables with blacklisted ones filtered out
-=======
      * @param originalCandidates The collection to check for excluded SSTables
      * @return list of the SSTables with excluded ones filtered out
->>>>>>> cassandra-5
      */
     public static List<SSTableReader> filterSuspectSSTables(Iterable<SSTableReader> originalCandidates)
     {
