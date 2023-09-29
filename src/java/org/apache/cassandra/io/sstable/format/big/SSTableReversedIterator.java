@@ -184,14 +184,7 @@ public class SSTableReversedIterator extends AbstractSSTableIterator<RowIndexEnt
 
             if (!hasNext())
                 throw new NoSuchElementException();
-<<<<<<< HEAD:src/java/org/apache/cassandra/db/columniterator/SSTableReversedIterator.java
-            Unfiltered next = iterator.next();
-            mostRecentlyEmitted = next;
-            //StorageService.instance.readSSTables += System.currentTimeMillis() - startDataBlock;
-            return next;
-=======
             return iterator.next();
->>>>>>> cassandra-5:src/java/org/apache/cassandra/io/sstable/format/big/SSTableReversedIterator.java
         }
 
         protected boolean stopReadingDisk() throws IOException

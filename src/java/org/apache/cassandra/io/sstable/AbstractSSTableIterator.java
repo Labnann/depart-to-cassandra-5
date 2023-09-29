@@ -453,6 +453,7 @@ public abstract class AbstractSSTableIterator<RIE extends AbstractRowIndexEntry>
         // Return what should be returned at the end of this, or null if nothing should.
         private Unfiltered handlePreSliceData() throws IOException
         {
+            long startDataBlock = System.currentTimeMillis();
             assert deserializer != null;
 
             // Note that the following comparison is not strict. The reason is that the only cases
@@ -475,9 +476,11 @@ public abstract class AbstractSSTableIterator<RIE extends AbstractRowIndexEntry>
 
             // We've reached the beginning of our queried slice. If we have an open marker
             // we should return that first.
-            if (openMarker != null)
+            if (openMarker != null){
+                StorageService.instance.readSSTables += System.currentTimeMillis() - startDataBlock;
                 return new RangeTombstoneBoundMarker(sliceStart, openMarker);
-
+            }
+            StorageService.instance.readSSTables += System.currentTimeMillis() - startDataBlock;
             return null;
         }
 
@@ -487,6 +490,7 @@ public abstract class AbstractSSTableIterator<RIE extends AbstractRowIndexEntry>
         protected Unfiltered computeNext() throws IOException
         {
             assert deserializer != null;
+            long startDataBlock = System.currentTimeMillis();
 
             while (true)
             {
@@ -508,6 +512,8 @@ public abstract class AbstractSSTableIterator<RIE extends AbstractRowIndexEntry>
 
                 if (next.kind() == Unfiltered.Kind.RANGE_TOMBSTONE_MARKER)
                     updateOpenMarker((RangeTombstoneMarker) next);
+                StorageService.instance.readSSTables += System.currentTimeMillis() - startDataBlock;
+
                 return next;
             }
         }
