@@ -76,11 +76,9 @@ import org.apache.cassandra.schema.Schema;
 import org.apache.cassandra.schema.SchemaConstants;
 import org.apache.cassandra.schema.TableMetadata;
 import org.apache.cassandra.security.ThreadAwareSecurityManager;
-<<<<<<< HEAD
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-=======
 import org.apache.cassandra.streaming.StreamManager;
 import org.apache.cassandra.service.paxos.PaxosState;
 import org.apache.cassandra.utils.FBUtilities;
@@ -107,7 +105,6 @@ import static org.apache.cassandra.config.CassandraRelevantProperties.JAVA_VM_NA
 import static org.apache.cassandra.config.CassandraRelevantProperties.METRICS_REPORTER_CONFIG_FILE;
 import static org.apache.cassandra.config.CassandraRelevantProperties.SIZE_RECORDER_INTERVAL;
 import static org.apache.cassandra.config.CassandraRelevantProperties.START_NATIVE_TRANSPORT;
->>>>>>> cassandra-5
 
 /**
  * The <code>CassandraDaemon</code> is an abstraction for a Cassandra daemon

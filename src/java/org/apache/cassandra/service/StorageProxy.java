@@ -1365,14 +1365,9 @@ public class StorageProxy implements StorageProxyMBean
                                                                        long queryStartNanoTime)
     {
         String keyspaceName = mutation.getKeyspaceName();
-<<<<<<< HEAD
-        AbstractReplicationStrategy rs = Keyspace.open(keyspaceName).getReplicationStrategy();
-
         ////
         StorageService.instance.WriteConsistencyLevel = consistency_level; //////
-=======
         Keyspace keyspace = Keyspace.open(keyspaceName);
->>>>>>> cassandra-5
         Token tk = mutation.key().getToken();
 
         ReplicaPlan.ForWrite replicaPlan = ReplicaPlans.forWrite(keyspace, consistencyLevel, tk, ReplicaPlans.writeNormal);
@@ -2040,11 +2035,7 @@ public class StorageProxy implements StorageProxyMBean
             readMetrics.addNano(latency);
             readMetricsForLevel(consistencyLevel).addNano(latency);
             // TODO avoid giving every command the same latency number.  Can fix this in CASSADRA-5329
-<<<<<<< HEAD
-            for (ReadCommand command : group.commands){
-=======
-            for (ReadCommand command : group.queries)
->>>>>>> cassandra-5
+            for (ReadCommand command : group.queries) {
                 Keyspace.openAndGetStore(command.metadata()).metric.coordinatorReadLatency.update(latency, TimeUnit.NANOSECONDS);
                 //command.getColumnFamilyStorefromMultiReplicas(command.metadata()).metric.coordinatorReadLatency.update(latency, TimeUnit.NANOSECONDS);
                 //logger.debug("---in readRegular, cfs cfId:{}, cfs:{}", command.metadata().cfId, command.metadata().cfName);
@@ -2242,7 +2233,6 @@ public class StorageProxy implements StorageProxyMBean
             }
         }
 
-<<<<<<< HEAD
     public static List<InetAddress> getLiveSortedEndpoints(Keyspace keyspace, ByteBuffer key)
     {
         return getLiveSortedEndpoints(keyspace, StorageService.instance.getTokenMetadata().decorateKey(key));
@@ -2304,10 +2294,8 @@ public class StorageProxy implements StorageProxyMBean
         public final List<InetAddress> filteredEndpoints;
 
         public RangeForQuery(AbstractBounds<PartitionPosition> range, List<InetAddress> liveEndpoints, List<InetAddress> filteredEndpoints)
-=======
         @Override
         public long creationTimeNanos()
->>>>>>> cassandra-5
         {
             return approxCreationTimeNanos;
         }
@@ -2331,7 +2319,6 @@ public class StorageProxy implements StorageProxyMBean
     {
         if (DatabaseDescriptor.getPartitionDenylistEnabled() && DatabaseDescriptor.getDenylistRangeReadsEnabled())
         {
-<<<<<<< HEAD
             this.keyspace = keyspace;
             this.consistency = consistency;
 
@@ -2384,11 +2371,6 @@ public class StorageProxy implements StorageProxyMBean
             // getRestrictedRange has broken the queried range into per-[vnode] token ranges, but this doesn't take
             // the replication factor into account. If the intersection of live endpoints for 2 consecutive ranges
             // still meets the CL requirements, then we can merge both ranges into the same RangeSliceCommand.
-            while (ranges.hasNext())
-=======
-            final int denylisted = partitionDenylist.getDeniedKeysInRangeCount(command.metadata().id, command.dataRange().keyRange());
-            if (denylisted > 0)
->>>>>>> cassandra-5
             {
                 denylistMetrics.incrementRangeReadsRejected();
                 String tokens = command.loggableTokens();
@@ -2396,8 +2378,7 @@ public class StorageProxy implements StorageProxyMBean
                                                                 " Range read: %s", denylisted, command.metadata().keyspace, command.metadata().name,
                                                                 tokens));
             }
-        }
-<<<<<<< HEAD
+        }            while (ranges.hasNext())
 
         protected RowIterator computeNext()
         {
@@ -2580,35 +2561,25 @@ public class StorageProxy implements StorageProxyMBean
     }
 
     @SuppressWarnings("resource")
-    public static PartitionIterator getRangeSlice(PartitionRangeReadCommand command, ConsistencyLevel consistencyLevel, long queryStartNanoTime)
+    public static PartitionIterator getRangeSlice(PartitionRangeReadCommand command,
+                                                  ConsistencyLevel consistencyLevel,
+                                                  long queryStartNanoTime)
     {
-        Tracing.trace("Computing ranges to query");
-
-        Keyspace keyspace = Keyspace.open(command.metadata().ksName);
-        RangeIterator ranges = new RangeIterator(command, keyspace, consistencyLevel);
-
-        // our estimate of how many result rows there will be per-range
-        float resultsPerRange = estimateResultsPerRange(command, keyspace);
-        // underestimate how many rows we will get per-range in order to increase the likelihood that we'll
-        // fetch enough rows in the first round
-        resultsPerRange -= resultsPerRange * CONCURRENT_SUBREQUESTS_MARGIN;
-        int concurrencyFactor = resultsPerRange == 0.0
-                              ? 1
-                              : Math.max(1, Math.min(ranges.rangeCount(), (int) Math.ceil(command.limits().count() / resultsPerRange)));
-        logger.trace("Estimated result rows per range: {}; requested rows: {}, ranges.size(): {}; concurrent range requests: {}",
-                     resultsPerRange, command.limits().count(), ranges.rangeCount(), concurrencyFactor);
-        Tracing.trace("Submitting range requests on {} ranges with a concurrency of {} ({} rows per range expected)", ranges.rangeCount(), concurrencyFactor, resultsPerRange);
-
-        // Note that in general, a RangeCommandIterator will honor the command limit for each range, but will not enforce it globally.
-
-        return command.limits().filter(command.postReconciliationProcessing(new RangeCommandIterator(ranges, command, concurrencyFactor, keyspace, consistencyLevel, queryStartNanoTime)),
-                                       command.nowInSec(),
-                                       command.selectsFullPartition(),
-                                       command.metadata().enforceStrictLiveness());
-=======
+        if (DatabaseDescriptor.getPartitionDenylistEnabled() && DatabaseDescriptor.getDenylistRangeReadsEnabled())
+        {
+            final int denylisted = partitionDenylist.getDeniedKeysInRangeCount(command.metadata().id, command.dataRange().keyRange());
+            if (denylisted > 0)
+            {
+                denylistMetrics.incrementRangeReadsRejected();
+                String tokens = command.loggableTokens();
+                throw new InvalidRequestException(String.format("Attempted to read a range containing %d denylisted keys in %s/%s." +
+                                                                " Range read: %s", denylisted, command.metadata().keyspace, command.metadata().name,
+                                                                tokens));
+            }
+        }
         return RangeCommands.partitions(command, consistencyLevel, queryStartNanoTime);
->>>>>>> cassandra-5
     }
+
 
     public Map<String, List<String>> getSchemaVersions()
     {
