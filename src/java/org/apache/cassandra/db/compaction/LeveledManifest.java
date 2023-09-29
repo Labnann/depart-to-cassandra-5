@@ -237,7 +237,6 @@ public class LeveledManifest
         // This isn't a magic wand -- if you are consistently writing too fast for LCS to keep
         // up, you're still screwed.  But if instead you have intermittent bursts of activity,
         // it can help a lot.
-<<<<<<< HEAD
         //for (int i = 0; i < generations.length; i++)
 
     if(cfs.name.equals("globalReplicaTable")){//////
@@ -281,15 +280,12 @@ public class LeveledManifest
         }
     }else{//////
         //for (int i = generations.length - 1; i > 0; i--)
-        for (int i = 0; i < generations.length; i++)
-=======
 
         // Let's check that L0 is far enough behind to warrant STCS.
         // If it is, it will be used before proceeding any of higher level
         CompactionCandidate l0Compaction = getSTCSInL0CompactionCandidate();
 
         for (int i = generations.levelCount() - 1; i > 0; i--)
->>>>>>> cassandra-5
         {
             Set<SSTableReader> sstables = generations.get(i);
             if (sstables.isEmpty())
@@ -315,13 +311,8 @@ public class LeveledManifest
                 }
 
                 // before proceeding with a higher level, let's see if L0 is far enough behind to warrant STCS
-<<<<<<< HEAD
-                CompactionCandidate l0Compaction = getSTCSInL0CompactionCandidate();
                 if (l0Compaction != null){
                     logger.debug("in getCompactionCandidates l0Compaction, cfs:{}, sstables num:{}, level:{}", cfs, l0Compaction.sstables.size(), l0Compaction.level);
-=======
-                if (l0Compaction != null)
->>>>>>> cassandra-5
                     return l0Compaction;
                 }
 
