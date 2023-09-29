@@ -192,22 +192,14 @@ public class SerializationHeader
 
     public long readLocalDeletionTime(DataInputPlus in) throws IOException
     {
-<<<<<<< HEAD
         StorageService.instance.totalReadBytes+=4;////
-        return (int)in.readUnsignedVInt() + stats.minLocalDeletionTime;
-=======
         return in.readUnsignedVInt32() + stats.minLocalDeletionTime;
->>>>>>> cassandra-5
     }
 
     public int readTTL(DataInputPlus in) throws IOException
     {
-<<<<<<< HEAD
         StorageService.instance.totalReadBytes+=4;////
-        return (int)in.readUnsignedVInt() + stats.minTTL;
-=======
         return in.readUnsignedVInt32() + stats.minTTL;
->>>>>>> cassandra-5
     }
 
     public DeletionTime readDeletionTime(DataInputPlus in) throws IOException
