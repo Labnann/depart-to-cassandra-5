@@ -22,12 +22,7 @@ import java.io.IOException;
 import org.apache.cassandra.schema.TableMetadata;
 import org.apache.cassandra.db.rows.*;
 import org.apache.cassandra.io.util.DataInputPlus;
-<<<<<<< HEAD
-import org.apache.cassandra.io.util.FileDataInput;
-import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.service.StorageService;
-=======
->>>>>>> cassandra-5
 
 /**
  * Helper class to deserialize Unfiltered object from disk efficiently.

@@ -161,13 +161,9 @@ public class CompactionController extends AbstractCompactionController
                                                              boolean ignoreOverlaps)
     {
         logger.trace("Checking droppable sstables in {}", cfStore);
-<<<<<<< HEAD
         logger.debug("Checking droppable sstables in {}", cfStore);
-        if (NEVER_PURGE_TOMBSTONES || compacting == null)
-=======
 
         if (NEVER_PURGE_TOMBSTONES_PROPERTY_VALUE || compacting == null || cfStore.getNeverPurgeTombstones() || overlapping == null)
->>>>>>> cassandra-5
             return Collections.emptySet();
 
         if (cfStore.getCompactionStrategyManager().onlyPurgeRepairedTombstones() && !Iterables.all(compacting, SSTableReader::isRepaired))
