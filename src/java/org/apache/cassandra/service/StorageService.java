@@ -362,7 +362,6 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
     private final List<Runnable> preShutdownHooks = new ArrayList<>();
     private final List<Runnable> postShutdownHooks = new ArrayList<>();
 
-<<<<<<< HEAD
     public DbImpl db;
     public InetAddress repairNode = null;
     public int splitDelay = 60; 
@@ -437,9 +436,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
     public ColumnFamilyStore migartedCFS = null;
 
     public InetAddress localIP = FBUtilities.getBroadcastAddress();
-=======
     public final SnapshotManager snapshotManager = new SnapshotManager();
->>>>>>> cassandra-5
 
     public static final StorageService instance = new StorageService();
 
@@ -551,10 +548,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
 
     private final StreamStateStore streamStateStore = new StreamStateStore();
 
-<<<<<<< HEAD
-=======
     public final SSTablesGlobalTracker sstablesTracker;
->>>>>>> cassandra-5
 
     public boolean isSurveyMode()
     {
@@ -593,14 +587,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
 
     public StorageService()
     {
-<<<<<<< HEAD
-        // use dedicated executor for sending JMX notifications
-        super(Executors.newSingleThreadExecutor());
-        logger.info("**********path:{}",System.getProperty("java.library.path"));
-=======
         // use dedicated executor for handling JMX notifications
         super(JMXBroadcastExecutor.executor);
->>>>>>> cassandra-5
+        logger.info("**********path:{}",System.getProperty("java.library.path"));
 
         jmxObjectName = "org.apache.cassandra.db:type=StorageService";
 
@@ -611,63 +600,11 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
     {
         MBeanWrapper.instance.registerMBean(this, jmxObjectName);
         MBeanWrapper.instance.registerMBean(StreamManager.instance, StreamManager.OBJECT_NAME);
-<<<<<<< HEAD
-
-        legacyProgressSupport = new LegacyJMXProgressSupport(this, jmxObjectName);
 
         for(int i=0; i<20; i++){
             totalLevelWrite[i]=0;
         }
 
-        /*
-        dataByteQueue.clear();
-        for(int i=0; i<100; i++){ //
-            byte[] dataByte = new byte[32*1024];
-            dataByteQueue.add(dataByte);
-        }
-
-        MetaByteQueue.clear();
-        for(int i=0; i<30; i++){
-            //byte[] dataByte = new byte[12*1024*1024];//16
-            byte[] dataByte = new byte[1*1024*1024];//16
-            MetaByteQueue.add(dataByte);
-        }*/
-
-        /* register the verb handlers */
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.MUTATION, new MutationVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.READ_REPAIR, new ReadRepairVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.READ, new ReadCommandVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.RANGE_SLICE, new RangeSliceVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.PAGED_RANGE, new RangeSliceVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.COUNTER_MUTATION, new CounterMutationVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.TRUNCATE, new TruncateVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.PAXOS_PREPARE, new PrepareVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.PAXOS_PROPOSE, new ProposeVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.PAXOS_COMMIT, new CommitVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.HINT, new HintVerbHandler());
-
-        // see BootStrapper for a summary of how the bootstrap verbs interact
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.REPLICATION_FINISHED, new ReplicationFinishedVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.REQUEST_RESPONSE, new ResponseVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.INTERNAL_RESPONSE, new ResponseVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.REPAIR_MESSAGE, new RepairMessageVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.GOSSIP_SHUTDOWN, new GossipShutdownVerbHandler());
-
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.GOSSIP_DIGEST_SYN, new GossipDigestSynVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.GOSSIP_DIGEST_ACK, new GossipDigestAckVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.GOSSIP_DIGEST_ACK2, new GossipDigestAck2VerbHandler());
-
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.DEFINITIONS_UPDATE, new DefinitionsUpdateVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.SCHEMA_CHECK, new SchemaCheckVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.MIGRATION_REQUEST, new MigrationRequestVerbHandler());
-
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.SNAPSHOT, new SnapshotVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.ECHO, new EchoVerbHandler());
-
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.BATCH_STORE, new BatchStoreVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.BATCH_REMOVE, new BatchRemoveVerbHandler());
-=======
->>>>>>> cassandra-5
     }
 
     public void registerDaemon(CassandraDaemon daemon)
@@ -5353,74 +5290,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
     @Override
     public String getToken(String keyspaceName, String table, String key)
     {
-<<<<<<< HEAD
-        return getNaturalEndpoints(keyspaceName, tokenMetadata.partitioner.getToken(key));
-    }
 
-    /**
-     * This method returns the N endpoints that are responsible for storing the
-     * specified key i.e for replication.
-     *
-     * @param keyspaceName keyspace name also known as keyspace
-     * @param pos position for which we need to find the endpoint
-     * @return the endpoint responsible for this token
-     */
-    public List<InetAddress> getNaturalEndpoints(String keyspaceName, RingPosition pos)
-    {
-        return Keyspace.open(keyspaceName).getReplicationStrategy().getNaturalEndpoints(pos);
-    }
-
-    /**
-     * Returns the endpoints currently responsible for storing the token plus pending ones
-     */
-    public Iterable<InetAddress> getNaturalAndPendingEndpoints(String keyspaceName, Token token)
-    {
-        return Iterables.concat(getNaturalEndpoints(keyspaceName, token), tokenMetadata.pendingEndpointsFor(token, keyspaceName));
-    }
-
-    /**
-     * This method attempts to return N endpoints that are responsible for storing the
-     * specified key i.e for replication.
-     *
-     * @param keyspace keyspace name also known as keyspace
-     * @param key key for which we need to find the endpoint
-     * @return the endpoint responsible for this key
-     */
-    public List<InetAddress> getLiveNaturalEndpoints(Keyspace keyspace, ByteBuffer key)
-    {
-        logger.debug("int getLiveNaturalEndpoints, key:{}", key);
-        return getLiveNaturalEndpoints(keyspace, tokenMetadata.decorateKey(key));
-    }
-
-    public List<InetAddress> getLiveNaturalEndpoints(Keyspace keyspace, RingPosition pos)
-    {
-        List<InetAddress> liveEps = new ArrayList<>();
-        getLiveNaturalEndpoints(keyspace, pos, liveEps);
-        //logger.debug("int getLiveNaturalEndpoints, pos:{}, liveEps:{}", pos, liveEps);
-        
-        return liveEps;
-    }
-
-    /**
-     * This method attempts to return N endpoints that are responsible for storing the
-     * specified key i.e for replication.
-     *
-     * @param keyspace keyspace name also known as keyspace
-     * @param pos position for which we need to find the endpoint
-     * @param liveEps the list of endpoints to mutate
-     */
-    public void getLiveNaturalEndpoints(Keyspace keyspace, RingPosition pos, List<InetAddress> liveEps)
-    {
-        List<InetAddress> endpoints = keyspace.getReplicationStrategy().getNaturalEndpoints(pos);
-
-        for (InetAddress endpoint : endpoints)
-        {
-            if (FailureDetector.instance.isAlive(endpoint))
-                liveEps.add(endpoint);
-        }
-=======
         return tokenMetadata.partitioner.getToken(partitionKeyToBytes(keyspaceName, table, key)).toString();
->>>>>>> cassandra-5
     }
 
     public void setLoggingLevel(String classQualifier, String rawLevel) throws Exception
@@ -6126,18 +5997,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
             List<Future<?>> flushes = new ArrayList<>();
             for (Keyspace keyspace : Keyspace.nonSystem())
             {
-<<<<<<< HEAD
-                for (ColumnFamilyStore cfs : keyspace.getColumnFamilyStores()){
-                    flushes.add(cfs.forceFlush());
-                    /*if(cfs.getCFSMemTableSize() > 10485760){
-                        logger.debug("###flushing memtable, size: {}", cfs.getCFSMemTableSize());
-                        flushes.add(cfs.forceFlush());
-                    }*/
-                }               
-=======
                 for (ColumnFamilyStore cfs : keyspace.getColumnFamilyStores())
                     flushes.add(cfs.forceFlush(ColumnFamilyStore.FlushReason.DRAIN));
->>>>>>> cassandra-5
             }
             // wait for the flushes.
             // TODO this is a godawful way to track progress, since they flush in parallel.  a long one could
@@ -6168,18 +6029,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
             flushes.clear();
             for (Keyspace keyspace : Keyspace.system())
             {
-<<<<<<< HEAD
-                for (ColumnFamilyStore cfs : keyspace.getColumnFamilyStores()){
-                    flushes.add(cfs.forceFlush());
-                    /*if(cfs.getCFSMemTableSize() > 10485760){
-                        logger.debug("##flushing memtable, size: {}", cfs.getCFSMemTableSize());
-                        flushes.add(cfs.forceFlush());
-                    }*/
-                }
-=======
                 for (ColumnFamilyStore cfs : keyspace.getColumnFamilyStores())
                     flushes.add(cfs.forceFlush(ColumnFamilyStore.FlushReason.DRAIN));
->>>>>>> cassandra-5
             }
             FBUtilities.waitOnFutures(flushes);
 
