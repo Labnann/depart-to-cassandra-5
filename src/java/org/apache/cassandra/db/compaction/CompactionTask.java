@@ -182,12 +182,6 @@ public class CompactionTask extends AbstractCompactionTask
 
         try (CompactionController controller = getCompactionController(transaction.originals()))
         {
-<<<<<<< HEAD
-            Set<SSTableReader> actuallyCompact = null;
-            actuallyCompact = Sets.difference(transaction.originals(), controller.getFullyExpiredSSTables());
-
-=======
-
             final Set<SSTableReader> fullyExpiredSSTables = controller.getFullyExpiredSSTables();
 
             TimeUUID taskId = transaction.opId();
@@ -229,8 +223,8 @@ public class CompactionTask extends AbstractCompactionTask
             long inputSizeBytes;
             long timeSpentWritingKeys;
 
-            Set<SSTableReader> actuallyCompact = Sets.difference(transaction.originals(), fullyExpiredSSTables);
->>>>>>> cassandra-5
+            Set<SSTableReader> actuallyCompact = null;
+            actuallyCompact = Sets.difference(transaction.originals(), fullyExpiredSSTables);
             Collection<SSTableReader> newSStables;
             logger.debug("transaction.originals size:{}, actuallyCompact size:{}", transaction.originals().size(), actuallyCompact.size());
 
@@ -260,7 +254,6 @@ public class CompactionTask extends AbstractCompactionTask
                     if (!controller.cfs.getCompactionStrategyManager().isActive())
                         throw new CompactionInterruptedException(ci.getCompactionInfo());
                     estimatedKeys = writer.estimatedKeys();
-<<<<<<< HEAD
                     ///////////////////////////////////////////////////////
                     logger.debug("during compaction, cfs.name:{}, getLevel:{}",cfs.name, getLevel());
                     if(cfs.name.equals("globalReplicaTable") && getLevel()>0 ){
@@ -338,30 +331,11 @@ public class CompactionTask extends AbstractCompactionTask
 
                             lastBytesScanned = bytesScanned;
 
-                            if (System.nanoTime() - lastCheckObsoletion > TimeUnit.MINUTES.toNanos(1L))
+                            if (nanoTime() - lastCheckObsoletion > TimeUnit.MINUTES.toNanos(1L))
                             {
                                 controller.maybeRefreshOverlaps();
-                                lastCheckObsoletion = System.nanoTime();
+                                lastCheckObsoletion = nanoTime();
                             }
-=======
-                    while (ci.hasNext())
-                    {
-                        if (writer.append(ci.next()))
-                            totalKeysWritten++;
-
-                        ci.setTargetDirectory(writer.getSStableDirectory().path());
-                        long bytesScanned = scanners.getTotalBytesScanned();
-
-                        // Rate limit the scanners, and account for compression
-                        CompactionManager.compactionRateLimiterAcquire(limiter, bytesScanned, lastBytesScanned, compressionRatio);
-
-                        lastBytesScanned = bytesScanned;
-
-                        if (nanoTime() - lastCheckObsoletion > TimeUnit.MINUTES.toNanos(1L))
-                        {
-                            controller.maybeRefreshOverlaps();
-                            lastCheckObsoletion = nanoTime();
->>>>>>> cassandra-5
                         }
 
                         for (Map.Entry<String,CountDownLatch> latchEntry: StorageService.instance.groupCountDownMap.entrySet()) {                                
@@ -405,10 +379,10 @@ public class CompactionTask extends AbstractCompactionTask
 
                             lastBytesScanned = bytesScanned;
 
-                            if (System.nanoTime() - lastCheckObsoletion > TimeUnit.MINUTES.toNanos(1L))
+                            if (nanoTime() - lastCheckObsoletion > TimeUnit.MINUTES.toNanos(1L))
                             {
                                 controller.maybeRefreshOverlaps();
-                                lastCheckObsoletion = System.nanoTime();
+                                lastCheckObsoletion = nanoTime();
                             }
                         }
 
@@ -472,14 +446,13 @@ public class CompactionTask extends AbstractCompactionTask
                                        timeSpentWritingKeys));
             if (logger.isTraceEnabled())
             {
-<<<<<<< HEAD
                 Refs.release(Refs.selfRefs(newSStables));
             }
             else
             {
                 // log a bunch of statistics about the result and save to system table compaction_history
 
-                long durationInNano = System.nanoTime() - start;
+                long durationInNano = nanoTime() - start;
                 long dTime = TimeUnit.NANOSECONDS.toMillis(durationInNano);
                 long startsize = inputSizeBytes;
                 long endsize = SSTableReader.getTotalBytes(newSStables);
@@ -518,20 +491,14 @@ public class CompactionTask extends AbstractCompactionTask
                 logger.debug("------DifferentiationTime:{} ms, DifferentiationNaTime:{} ns", StorageService.instance.DifferentiationTime, StorageService.instance.DifferentiationNaTime);
                 
                 strategy.getScanners(newSStables);
-=======
->>>>>>> cassandra-5
                 logger.trace("CF Total Bytes Compacted: {}", FBUtilities.prettyPrintMemory(CompactionTask.addToTotalBytesCompacted(endsize)));
                 logger.trace("Actual #keys: {}, Estimated #keys:{}, Err%: {}", totalKeysWritten, estimatedKeys, ((double)(totalKeysWritten - estimatedKeys)/totalKeysWritten));
             }
-<<<<<<< HEAD
-            //StorageService.instance.compaction += System.currentTimeMillis() - startTime;
 
-=======
             cfs.getCompactionStrategyManager().compactionLogger.compaction(startTime, transaction.originals(), currentTimeMillis(), newSStables);
 
             // update the metrics
             cfs.metric.compactionBytesWritten.inc(endsize);
->>>>>>> cassandra-5
         }
     }
 
