@@ -43,6 +43,8 @@ import org.apache.cassandra.utils.MerkleTrees;
 
 import static org.apache.cassandra.utils.Clock.Global.nanoTime;
 
+import org.apache.cassandra.service.StorageService;
+
 public class ValidationManager
 {
     private static final Logger logger = LoggerFactory.getLogger(ValidationManager.class);
@@ -101,6 +103,9 @@ public class ValidationManager
     @SuppressWarnings("resource")
     private void doValidation(ColumnFamilyStore cfs, Validator validator) throws IOException, NoSuchRepairSessionException
     {
+        StorageService.instance.duringRepair = true;
+        long beginTime = System.currentTimeMillis();
+
         // this isn't meant to be race-proof, because it's not -- it won't cause bugs for a CFS to be dropped
         // mid-validation, or to attempt to validate a droped CFS.  this is just a best effort to avoid useless work,
         // particularly in the scenario where a validation is submitted before the drop, and there are compactions
@@ -112,6 +117,57 @@ public class ValidationManager
             state.phase.skip(String.format("Table %s is not valid", cfs));
             return;
         }
+            ///////////////////////////////////////////////////
+        Options options = new Options();
+        options.createIfMissing(true);
+        Set<InetAddress> liveHosts = Gossiper.instance.getLiveMembers();
+        try {
+            String DBname = "data/replicatedData";
+            File file = new File(DBname);
+            if(!file.exists()){
+                //StorageService.instance.db = factory.open(file, options);
+                StorageService.instance.db = new DbImpl(options, file);
+            }
+            //db.close();
+        } catch(Throwable e){
+                logger.debug("open twoLayerLog failed!!");
+        }
+        InetAddress LOCAL = FBUtilities.getBroadcastAddress();
+        for (InetAddress host : liveHosts){///
+            if (!host.equals(LOCAL)) {          
+                Collection<Token> nodeToken = StorageService.instance.getTokenMetadata().getTokens(host);
+                //logger.debug("nodeIP:{}, nodeToken size:{}, nodeToken:{}", host, nodeToken.size(), nodeToken);
+                List<String> strTokensList = new ArrayList<String>();
+                for(Token tk: nodeToken){
+                    String strToken = StorageService.instance.getTokenFactory().toString(tk);//////
+                    strTokensList.add(strToken);
+                    //logger.debug("strToken size:{}, strToken:{}", strTokensList.size(), strToken);
+                }
+                try{
+                    byte ip[] = host.getAddress();  
+                    int NodeID = (int)ip[3];
+                    StorageService.instance.db.createReplicaDir(NodeID, strTokensList, cfs.keyspace.getName());
+                } catch(Throwable e){
+                    logger.debug("create replicaDir failed!!");
+                }
+            }
+        }
+        ////////////////////////////////////////////////////
+        Collection<Range<Token>> validatorRanges = validator.desc.ranges;
+        Collection<Range<Token>> mainRanges = new ArrayList<>();
+        Collection<Range<Token>> replicaRanges = new ArrayList<>();
+        for(Range<Token> curRang: validatorRanges){
+            List<InetAddress> ep = StorageService.instance.getNaturalEndpoints(cfs.keyspace.getName(), curRang.right);
+            if (!ep.get(0).equals(LOCAL)) {//the range is stored in replica copy
+                replicaRanges.add(curRang);
+            }else{
+                mainRanges.add(curRang);
+            }
+        }
+        logger.debug("validatorRanges size:{}, mainRanges size:{}, replicaRanges size:{}", validatorRanges.size(), mainRanges.size(), replicaRanges.size());
+
+        if (mainRanges.size() > 0) {
+
 
         TopPartitionTracker.Collector topPartitionCollector = null;
         if (cfs.topPartitions != null && DatabaseDescriptor.topPartitionsEnabled() && isTopPartitionSupported(validator))
@@ -155,6 +211,67 @@ public class ValidationManager
                          duration,
                          validator.desc);
         }
+     }
+
+      if(replicaRanges.size()>0){
+            logger.debug("before createMerkleTreesForReplica, replicaRanges:{}", replicaRanges);
+            // Create Merkle trees suitable to hold estimated partitions for the given ranges.
+            // We blindly assume that a partition is evenly distributed on all sstables for now.
+            MerkleTrees tree = createMerkleTreesForReplica(replicaRanges, cfs);
+            long start = System.nanoTime();
+            // validate the CF as we iterate over it
+            validator.prepare(cfs, tree);               
+            //////////////////////////////////////
+                logger.debug("before getRangeRowAndInsertValidator, getValidated:{}", validator.getValidated());
+                for (Range<Token> range : replicaRanges)
+                {                                      
+                    //ArrayList<Token> tokens = StorageService.instance.getTokenMetadata().sortedTokens();
+                    List<InetAddress> ep = StorageService.instance.getNaturalEndpoints(cfs.keyspace.getName(), range.right);
+                    if (!ep.get(0).equals(LOCAL)) {//the range is stored in replica copy
+                        Map<String, byte[]> keyValueMap = new HashMap<String, byte[]>();
+                        byte ip[] = ep.get(0).getAddress();  
+                        int NodeID = (int)ip[3];
+                        Token rightBound = StorageService.instance.getBoundToken(range.right);
+                        ////////return value one by one
+                        /*int rowNumber = StorageService.instance.getRangeRowAndInsertValidator(NodeID, range.left, rightBound, keyValueMap); 
+                        logger.debug("rowNumber:{}, keyValueMap size:{}", rowNumber, keyValueMap.size()); 
+                        int validatorCount=0;                                                          
+                        for (Map.Entry<String, byte[]> entry : keyValueMap.entrySet()) {
+                            byte[] entryValue = entry.getValue();
+                            if(entryValue!=null){
+                                //logger.debug("look Key token:{}, Value size:{}",entry.getKey(), entryValue.length);
+                                Mutation remutation = null;
+                                try{
+                                    remutation = Mutation.serializer.deserializeToMutation(new DataInputBuffer(entryValue), MessagingService.current_version);
+                                    //String strKey1=ByteBufferUtil.string(remutation.key().getKey());
+                                    //logger.debug("get strKey1:{}", strKey1);
+                                }catch(Throwable e){
+                                    logger.debug("Mutation.serializer.deserialize failed in doValidationCompaction!");
+                                }
+                                for (PartitionUpdate update : remutation.getPartitionUpdates()){
+                                    UnfilteredRowIterator replicasIter = update.unfilteredIterator();
+                                    //validator.add(replicasIter); ////////////////////////////////////////////////////////////////////////////////
+                                    validatorCount++;                                
+                                }                                                             
+                            }                                       
+                        }
+                        logger.debug("rightBound:{}, range.right:{}, keyValueMap size:{}, getValidated:{}", rightBound, range.right, keyValueMap.size(), validator.getValidated());
+                        */
+                        //logger.debug("rightBound:{}, range.right:{}, batchBytesSize:{}, entries:{}, validatorCount:{}, getValidated:{}", rightBound, range.right, batchBytesSize, entries, validatorCount, validator.getValidated());
+                    }              
+                }
+                logger.debug("after getRangeRowAndInsertValidator, getValidated:{}", validator.getValidated());
+                /////////////////////////////////////
+                validator.complete();
+                long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+                logger.debug("Validation finished in {} msec, for {}",
+                             duration,
+                             validator.desc);
+        }
+        long endTime = System.currentTimeMillis();
+        StorageService.instance.buildMTrees+= endTime-beginTime;
+
+
     }
 
     private static boolean isTopPartitionSupported(Validator validator)

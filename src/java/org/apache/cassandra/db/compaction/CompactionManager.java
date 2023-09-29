@@ -442,18 +442,12 @@ public class CompactionManager implements CompactionManagerMBean
                     task.execute(active);
                     ranCompaction = true;
                 }
-<<<<<<< HEAD
-                
-                task.execute(metrics);
-=======
->>>>>>> cassandra-5
             }
             finally
             {
                 //logger.debug("######before compactingCF.remove: {}.{}", cfs.keyspace.getName(), cfs.name);
                 compactingCF.remove(cfs);
             }
-<<<<<<< HEAD
             //submitBackground(cfs);
         }
     }
@@ -1383,13 +1377,8 @@ public class CompactionManager implements CompactionManagerMBean
                 }
                 else
                 {
-<<<<<<< HEAD
                     logger.debug("In submitUserDefined");
-                    List<AbstractCompactionTask> tasks = cfs.getCompactionStrategyManager().getUserDefinedTasks(sstables, gcBefore);
-                    for (AbstractCompactionTask task : tasks)
-=======
                     try (CompactionTasks tasks = cfs.getCompactionStrategyManager().getUserDefinedTasks(sstables, gcBefore))
->>>>>>> cassandra-5
                     {
                         for (AbstractCompactionTask task : tasks)
                         {
