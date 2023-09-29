@@ -107,12 +107,7 @@ import org.apache.cassandra.repair.messages.SyncResponse;
 import org.apache.cassandra.repair.messages.ValidationResponse;
 import org.apache.cassandra.schema.TableId;
 import org.apache.cassandra.utils.FBUtilities;
-<<<<<<< HEAD
-import org.apache.cassandra.utils.UUIDGen;
-import org.apache.cassandra.utils.concurrent.Ref;
-import org.apache.cassandra.utils.concurrent.Refs;
 import org.apache.cassandra.service.StorageService;
-=======
 import org.apache.cassandra.utils.MBeanWrapper;
 import org.apache.cassandra.utils.MerkleTrees;
 import org.apache.cassandra.utils.Pair;
@@ -138,7 +133,6 @@ import static org.apache.cassandra.utils.Clock.Global.currentTimeMillis;
 import static org.apache.cassandra.utils.Simulate.With.MONITORS;
 import static org.apache.cassandra.utils.Clock.Global.nanoTime;
 import static org.apache.cassandra.utils.concurrent.CountDownLatch.newCountDownLatch;
->>>>>>> cassandra-5
 
 /**
  * ActiveRepairService is the starting point for manual "active" repairs.
@@ -804,13 +798,27 @@ public class ActiveRepairService implements IEndpointStateChangeSubscriber, IFai
     public synchronized ParentRepairSession removeParentRepairSession(TimeUUID parentSessionId)
     {
         String snapshotName = parentSessionId.toString();
-<<<<<<< HEAD
-        for (ColumnFamilyStore cfs : getParentRepairSession(parentSessionId).columnFamilyStores.values())
+        ParentRepairSession session = parentRepairSessions.remove(parentSessionId);
+        if (session == null)
+            return null;
+
+        if (session.hasSnapshots)
         {
-            if (cfs.snapshotExists(snapshotName))
-                cfs.clearSnapshot(snapshotName);
+            snapshotExecutor.submit(() -> {
+                logger.info("[repair #{}] Clearing snapshots for {}", parentSessionId,
+                            session.columnFamilyStores.values()
+                                                      .stream()
+                                                      .map(cfs -> cfs.metadata().toString()).collect(Collectors.joining(", ")));
+                long startNanos = nanoTime();
+                for (ColumnFamilyStore cfs : session.columnFamilyStores.values())
+                {
+                    if (cfs.snapshotExists(snapshotName))
+                        cfs.clearSnapshot(snapshotName);
+                }
+                logger.info("[repair #{}] Cleared snapshots in {}ms", parentSessionId, TimeUnit.NANOSECONDS.toMillis(nanoTime() - startNanos));
+            });
         }
-        return parentRepairSessions.remove(parentSessionId);
+        return session;
     }
 
     /**
@@ -883,44 +891,7 @@ public class ActiveRepairService implements IEndpointStateChangeSubscriber, IFai
         return allAntiCompactionResults;
     }
 
-    public void handleMessage(InetAddress endpoint, RepairMessage message)
-    {
-        RepairJobDesc desc = message.desc;
-        RepairSession session = sessions.get(desc.sessionId);
-=======
-        ParentRepairSession session = parentRepairSessions.remove(parentSessionId);
->>>>>>> cassandra-5
-        if (session == null)
-            return null;
 
-        if (session.hasSnapshots)
-        {
-<<<<<<< HEAD
-            case VALIDATION_COMPLETE:
-                ValidationComplete validation = (ValidationComplete) message;
-                session.validationComplete(desc, endpoint, validation.trees);
-               long curTime = System.currentTimeMillis();
-                long costTime= curTime-StorageService.instance.beginMTrees;
-                StorageService.instance.buildMTrees+=costTime;
-                if(costTime>StorageService.instance.maxTime) StorageService.instance.maxTime = costTime;
-                logger.debug("##costTime:{}, endpoint:{}, StorageService.instance.maxTime:{}", costTime, endpoint, StorageService.instance.maxTime);
-=======
-            snapshotExecutor.submit(() -> {
-                logger.info("[repair #{}] Clearing snapshots for {}", parentSessionId,
-                            session.columnFamilyStores.values()
-                                                      .stream()
-                                                      .map(cfs -> cfs.metadata().toString()).collect(Collectors.joining(", ")));
-                long startNanos = nanoTime();
-                for (ColumnFamilyStore cfs : session.columnFamilyStores.values())
-                {
-                    if (cfs.snapshotExists(snapshotName))
-                        cfs.clearSnapshot(snapshotName);
-                }
-                logger.info("[repair #{}] Cleared snapshots in {}ms", parentSessionId, TimeUnit.NANOSECONDS.toMillis(nanoTime() - startNanos));
-            });
-        }
-        return session;
-    }
 
     public void handleMessage(Message<? extends RepairMessage> message)
     {
@@ -949,7 +920,11 @@ public class ActiveRepairService implements IEndpointStateChangeSubscriber, IFai
             case VALIDATION_RSP:
                 ValidationResponse validation = (ValidationResponse) payload;
                 session.validationComplete(desc, message.from(), validation.trees);
->>>>>>> cassandra-5
+                long curTime = System.currentTimeMillis();
+                long costTime= curTime-StorageService.instance.beginMTrees;
+                StorageService.instance.buildMTrees+=costTime;
+                if(costTime>StorageService.instance.maxTime) StorageService.instance.maxTime = costTime;
+                logger.debug("##costTime:{}, endpoint:{}, StorageService.instance.maxTime:{}", costTime, endpoint, StorageService.instance.maxTime);
                 break;
             case SYNC_RSP:
                 // one of replica is synced.
