@@ -1529,6 +1529,5 @@ public class StreamSession
         boundStackTrace(e.getCause(), limit, counter, visited, out);
         return out;
     }
->>>>>>> cassandra-5
 }
 
