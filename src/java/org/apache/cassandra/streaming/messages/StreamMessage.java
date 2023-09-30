@@ -61,16 +61,7 @@ public abstract class StreamMessage
     /** StreamMessage types */
     public enum Type
     {
-<<<<<<< HEAD
         REPLICAFILE(0, 0, IncomingReplicaFileMessage.serializer, OutgoingFileMessage.serializer),/////
-        PREPARE(1, 5, PrepareMessage.serializer),
-        FILE(2, 0, IncomingFileMessage.serializer, OutgoingFileMessage.serializer),
-        RECEIVED(3, 4, ReceivedMessage.serializer),
-        RETRY(4, 4, RetryMessage.serializer),
-        COMPLETE(5, 1, CompleteMessage.serializer),
-        SESSION_FAILED(6, 5, SessionFailedMessage.serializer),
-        KEEP_ALIVE(7, 5, KeepAliveMessage.serializer);
-=======
         PREPARE_SYN    (1,  5, PrepareSynMessage.serializer   ),
         STREAM         (2,  0, IncomingStreamMessage.serializer, OutgoingStreamMessage.serializer),
         RECEIVED       (3,  4, ReceivedMessage.serializer     ),
@@ -80,7 +71,6 @@ public abstract class StreamMessage
         PREPARE_SYNACK (8,  5, PrepareSynAckMessage.serializer),
         PREPARE_ACK    (9,  5, PrepareAckMessage.serializer   ),
         STREAM_INIT    (10, 5, StreamInitMessage.serializer   );
->>>>>>> cassandra-5
 
         private static final Map<Integer, Type> idToTypeMap;
 

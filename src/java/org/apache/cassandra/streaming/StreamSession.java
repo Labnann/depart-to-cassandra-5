@@ -1503,50 +1503,6 @@ public class StreamSession
     }
 
 
-<<<<<<< HEAD
-    public static StringBuilder boundStackTrace(Throwable e, int limit, int counter, Set<Throwable> visited, StringBuilder out)
-    {
-        if (e == null)
-            return out;
-
-        if (!visited.add(e))
-            return out.append("[CIRCULAR REFERENCE: ").append(e.getClass().getName()).append(": ").append(e.getMessage()).append("]").append('\n');
-        visited.add(e);
-
-        StackTraceElement[] stackTrace = e.getStackTrace();
-        out.append(e.getClass().getName() + ": " + e.getMessage()).append('\n');
-
-        // When dealing with the leaf, ignore how many stack traces were already written, and allow the max.
-        // This is here as the leaf tends to show where the issue started, so tends to be impactful for debugging
-        if (e.getCause() == null)
-            counter = limit;
-
-        for (int i = 0, size = Math.min(e.getStackTrace().length, limit); i < size && counter > 0; i++)
-        {            //to avoid jamming the message queue, we only send if the last one was sent
-            if (last == null || last.wasSent())
-            {
-                logger.trace("[Stream #{}] Sending keep-alive to {}.", planId(), peer);
-                //logger.debug("totalSSTablesChecked:{}, totalSSTablesView:{}",  StorageService.instance.totalSSTablesChecked, StorageService.instance.totalSSTablesView);
-                last = new KeepAliveMessage();
-                try
-                {
-                    handler.sendMessage(last);
-                }
-                catch (RuntimeException e) //connection handler is closed
-                {
-                    logger.debug("[Stream #{}] Could not send keep-alive message (perhaps stream session is finished?).", planId(), e);
-                }
-            }
-            else
-            {
-                logger.trace("[Stream #{}] Skip sending keep-alive to {} (previous was not yet sent).", planId(), peer);
-            }
-        }
-
-        boundStackTrace(e.getCause(), limit, counter, visited, out);
-        return out;
-    }
-=======
     public static StringBuilder boundStackTrace(Throwable e, int limit, int counter, Set<Throwable> visited, StringBuilder out)
     {
         if (e == null)

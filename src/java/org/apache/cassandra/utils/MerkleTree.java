@@ -211,25 +211,16 @@ public class MerkleTree
         List<TreeRange> diff = new ArrayList<>();
         TreeRange active = new TreeRange(ltree.fullRange.left, ltree.fullRange.right, 0);
 
-<<<<<<< HEAD
-        Hashable lnode = ltree.find(active);
-        Hashable rnode = rtree.find(active);
-        byte[] lhash = lnode.hash();
-        byte[] rhash = rnode.hash();
+        Node lnode = ltree.root;
+        Node rnode = rtree.root;
+
         String lhashStr = new String(lhash);
         String rhashStr = new String(rhash);
         logger.debug("lnode:{}, rnode:{}, lhash:{}, rhash:{},lhashStr==null:{}, lhashStr size:{}, rhashStr size:{}", lnode, rnode, lhashStr, rhashStr, lhashStr==null, lhashStr.length(), rhashStr.length());
         logger.debug("in difference, ltree.size:{}, rtree.size:{}, lhash:{}, rhash:{}, lnode.sizeOfRange:{}, rnode.sizeOfRange:{}", ltree.size(), rtree.size(), lhash, rhash, lnode.sizeOfRange(), rnode.sizeOfRange());
-        active.setSize(lnode.sizeOfRange(), rnode.sizeOfRange());
 
-        //if (lhash != null && rhash != null && !Arrays.equals(lhash, rhash))
-        if (lhash != null && lhashStr.length()>0 && rhash!= null && rhashStr.length()>0 && !Arrays.equals(lhash, rhash)) //////
-=======
-        Node lnode = ltree.root;
-        Node rnode = rtree.root;
 
-        if (lnode.hashesDiffer(rnode))
->>>>>>> cassandra-5
+        if (lnode.hashesDiffer(rnode) && lhashStr.length() > 0 && rhashStr.length() > 0)
         {
             if (lnode instanceof Leaf || rnode instanceof Leaf)
             {
@@ -238,11 +229,7 @@ public class MerkleTree
             }
             else
             {
-<<<<<<< HEAD
-                //logger.debug("Digest mismatch detected, traversing trees [{}, {}]", ltree, rtree);
-=======
-                logger.trace("Digest mismatch detected, traversing trees [{}, {}]", ltree, rtree);
->>>>>>> cassandra-5
+      //          logger.trace("Digest mismatch detected, traversing trees [{}, {}]", ltree, rtree);
                 if (FULLY_INCONSISTENT == differenceHelper(ltree, rtree, diff, active))
                 {
                     logger.trace("Range {} fully inconsistent", active);
@@ -252,15 +239,11 @@ public class MerkleTree
                 }//////*/
             }
         }
-<<<<<<< HEAD
-        //else if (lhash == null || rhash == null)
-        else if (lhash == null || rhash == null || lhashStr.length()==0 || rhashStr.length()==0){ //////
+        else if (!(lnode.hashesDiffer(rnode) && lhashStr.length() > 0 && rhashStr.length() > 0))
             diff.add(active);
             logger.debug("diff size:{}", diff.size());
         }
-=======
 
->>>>>>> cassandra-5
         return diff;
     }
 
@@ -284,26 +267,15 @@ public class MerkleTree
         {
             // If the midpoint equals either the left or the right, we have a range that's too small to split - we'll simply report the
             // whole range as inconsistent
-<<<<<<< HEAD
-            //logger.debug("({}) No sane midpoint ({}) for range {} , marking whole range as inconsistent", active.depth, midpoint, active);
-            return FULLY_INCONSISTENT;
-        }
 
-        TreeDifference left = new TreeDifference(active.left, midpoint, inc(active.depth));
-        TreeDifference right = new TreeDifference(midpoint, active.right, inc(active.depth));
-        //logger.debug("({}) Hashing sub-ranges [{}, {}] for {} divided by midpoint {}", active.depth, left, right, active, midpoint);
-        byte[] lhash, rhash;
-        Hashable lnode, rnode;
-=======
-            logger.trace("({}) No sane midpoint ({}) for range {} , marking whole range as inconsistent", active.depth, midpoint, active);
+ //           logger.trace("({}) No sane midpoint ({}) for range {} , marking whole range as inconsistent", active.depth, midpoint, active);
             return FULLY_INCONSISTENT;
         }
 
         TreeRange left = new TreeRange(active.left, midpoint, active.depth + 1);
         TreeRange right = new TreeRange(midpoint, active.right, active.depth + 1);
-        logger.trace("({}) Hashing sub-ranges [{}, {}] for {} divided by midpoint {}", active.depth, left, right, active, midpoint);
+ //       logger.trace("({}) Hashing sub-ranges [{}, {}] for {} divided by midpoint {}", active.depth, left, right, active, midpoint);
         Node lnode, rnode;
->>>>>>> cassandra-5
 
         // see if we should recurse left
         lnode = ltree.find(left);
@@ -312,26 +284,16 @@ public class MerkleTree
         Difference ldiff = CONSISTENT;
         if (null != lnode && null != rnode && lnode.hashesDiffer(rnode))
         {
-<<<<<<< HEAD
-            //logger.debug("({}) Inconsistent digest on left sub-range {}: [{}, {}]", active.depth, left, lnode, rnode);
-            if (lnode instanceof Leaf) ldiff = FULLY_INCONSISTENT;
-            else ldiff = differenceHelper(ltree, rtree, diff, left);
-=======
-            logger.trace("({}) Inconsistent digest on left sub-range {}: [{}, {}]", active.depth, left, lnode, rnode);
+ //           logger.trace("({}) Inconsistent digest on left sub-range {}: [{}, {}]", active.depth, left, lnode, rnode);
 
             if (lnode instanceof Leaf)
                 ldiff = FULLY_INCONSISTENT;
             else
                 ldiff = differenceHelper(ltree, rtree, diff, left);
->>>>>>> cassandra-5
         }
         else if (null == lnode || null == rnode)
         {
-<<<<<<< HEAD
-            //logger.debug("({}) Left sub-range fully inconsistent {}", active.depth, right);
-=======
-            logger.trace("({}) Left sub-range fully inconsistent {}", active.depth, left);
->>>>>>> cassandra-5
+   //         logger.trace("({}) Left sub-range fully inconsistent {}", active.depth, left);
             ldiff = FULLY_INCONSISTENT;
         }
 
@@ -342,64 +304,38 @@ public class MerkleTree
         Difference rdiff = CONSISTENT;
         if (null != lnode && null != rnode && lnode.hashesDiffer(rnode))
         {
-<<<<<<< HEAD
-            //logger.debug("({}) Inconsistent digest on right sub-range {}: [{}, {}]", active.depth, right, lnode, rnode);
-            if (rnode instanceof Leaf) rdiff = FULLY_INCONSISTENT;
-            else rdiff = differenceHelper(ltree, rtree, diff, right);
-=======
-            logger.trace("({}) Inconsistent digest on right sub-range {}: [{}, {}]", active.depth, right, lnode, rnode);
+ //           logger.trace("({}) Inconsistent digest on right sub-range {}: [{}, {}]", active.depth, right, lnode, rnode);
 
             if (rnode instanceof Leaf)
                 rdiff = FULLY_INCONSISTENT;
             else
                 rdiff = differenceHelper(ltree, rtree, diff, right);
->>>>>>> cassandra-5
         }
         else if (null == lnode || null == rnode)
         {
-<<<<<<< HEAD
-            //logger.debug("({}) Right sub-range fully inconsistent {}", active.depth, right);
-=======
-            logger.trace("({}) Right sub-range fully inconsistent {}", active.depth, right);
->>>>>>> cassandra-5
+   //         logger.trace("({}) Right sub-range fully inconsistent {}", active.depth, right);
             rdiff = FULLY_INCONSISTENT;
         }
 
         if (ldiff == FULLY_INCONSISTENT && rdiff == FULLY_INCONSISTENT)
         {
             // both children are fully inconsistent
-<<<<<<< HEAD
-            //logger.debug("({}) Fully inconsistent range [{}, {}]", active.depth, left, right);
-=======
-            logger.trace("({}) Fully inconsistent range [{}, {}]", active.depth, left, right);
->>>>>>> cassandra-5
+ //           logger.trace("({}) Fully inconsistent range [{}, {}]", active.depth, left, right);
             return FULLY_INCONSISTENT;
         }
         else if (ldiff == FULLY_INCONSISTENT)
         {
-<<<<<<< HEAD
-            //logger.debug("({}) Adding left sub-range to diff as fully inconsistent {}", active.depth, left);
-=======
-            logger.trace("({}) Adding left sub-range to diff as fully inconsistent {}", active.depth, left);
->>>>>>> cassandra-5
+            //logger.trace("({}) Adding left sub-range to diff as fully inconsistent {}", active.depth, left);
             diff.add(left);
             return PARTIALLY_INCONSISTENT;
         }
         else if (rdiff == FULLY_INCONSISTENT)
         {
-<<<<<<< HEAD
-            //logger.debug("({}) Adding right sub-range to diff as fully inconsistent {}", active.depth, right);
+     //       logger.trace("({}) Adding right sub-range to diff as fully inconsistent {}", active.depth, right);
             diff.add(right);
             return PARTIALLY_INCONSISTENT;
         }
-        //logger.debug("({}) Range {} partially inconstent", active.depth, active);
-=======
-            logger.trace("({}) Adding right sub-range to diff as fully inconsistent {}", active.depth, right);
-            diff.add(right);
-            return PARTIALLY_INCONSISTENT;
-        }
-        logger.trace("({}) Range {} partially inconstent", active.depth, active);
->>>>>>> cassandra-5
+      //  logger.trace("({}) Range {} partially inconstent", active.depth, active);
         return PARTIALLY_INCONSISTENT;
     }
 
