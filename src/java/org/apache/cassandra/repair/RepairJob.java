@@ -161,7 +161,6 @@ public class RepairJob extends AsyncFuture<RepairResult> implements Runnable
             }, taskExecutor);
             return;
         }
->>>>>>> cassandra-5
 
         // Create a snapshot at all nodes unless we're using pure parallel repairs
         if (parallelismDegree != RepairParallelism.PARALLEL)
