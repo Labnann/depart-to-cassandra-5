@@ -30,15 +30,12 @@ import com.codahale.metrics.Timer;
 import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 import org.apache.cassandra.metrics.DefaultNameFactory;
 import org.apache.cassandra.utils.concurrent.WaitQueue;
-<<<<<<< HEAD
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-=======
 import org.apache.cassandra.utils.ExecutorUtils;
 
 import static org.apache.cassandra.utils.concurrent.WaitQueue.newWaitQueue;
 
->>>>>>> cassandra-5
 
 /**
  * Represents an amount of memory used for a given purpose, that can be allocated to specific tasks through
@@ -212,12 +209,7 @@ public abstract class MemtablePool
 
         void released(long size)
         {
-<<<<<<< HEAD
-            //logger.debug("######released MemTable, size:{}, allocated:{}", size, allocated); 
-            assert size >= 0;
-=======
             assert size >= 0 : "Negative released: " + size;
->>>>>>> cassandra-5
             adjustAllocated(-size);
             //logger.debug("######after released MemTable, size:{}, allocated:{}", size, allocated); 
             hasRoom.signalAll();

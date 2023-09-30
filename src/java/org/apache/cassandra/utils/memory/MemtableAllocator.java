@@ -32,12 +32,9 @@ import org.slf4j.LoggerFactory;
 
 public abstract class MemtableAllocator
 {
-<<<<<<< HEAD
-    protected static final Logger logger = LoggerFactory.getLogger(MemtableAllocator.class);
-=======
+
     private static final Logger logger = LoggerFactory.getLogger(MemtableAllocator.class);
 
->>>>>>> cassandra-5
     private final SubAllocator onHeap;
     private final SubAllocator offHeap;
 
@@ -195,16 +192,7 @@ public abstract class MemtableAllocator
                 if (allocated)
                 {
                     signal.cancel();
-<<<<<<< HEAD
-                    if (allocated){ // if we allocated, take ownership
-                        acquired(size);
-                    }else{ // otherwise we're blocking so we're permitted to overshoot our constraints, to just allocate without blocking
-                        //logger.debug("----before allocated, size:{}", size); 
-                        allocated(size);
-                    }
-=======
                     acquired(size);
->>>>>>> cassandra-5
                     return;
                 }
                 else

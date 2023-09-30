@@ -50,14 +50,10 @@ import org.apache.cassandra.io.sstable.format.SSTableReader;
 import org.apache.cassandra.io.sstable.metadata.MetadataCollector;
 import org.apache.cassandra.io.sstable.metadata.StatsMetadata;
 import org.apache.cassandra.schema.CompactionParams;
-<<<<<<< HEAD
-import org.apache.cassandra.utils.JVMStabilityInspector;
 import org.apache.cassandra.service.StorageService;
-=======
 import org.apache.cassandra.utils.TimeUUID;
 
 import static org.apache.cassandra.utils.Clock.Global.currentTimeMillis;
->>>>>>> cassandra-5
 
 /**
  * Pluggable compaction strategy determines how SSTables get merged.
