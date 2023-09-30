@@ -393,18 +393,11 @@ public class MerkleTrees implements Iterable<Map.Entry<Range<Token>, MerkleTree>
     public static List<Range<Token>> difference(MerkleTrees ltrees, MerkleTrees rtrees)
     {
         List<Range<Token>> differences = new ArrayList<>();
-<<<<<<< HEAD
         logger.debug("ltree.size:{}, rtree.size:{}", ltree.size(), rtree.size());
-        for (MerkleTree tree : ltree.merkleTrees.values())
-        {
+        for (MerkleTree tree : ltrees.merkleTrees.values()){
+            //differences.addAll(MerkleTree.difference(tree, rtrees.getMerkleTree(tree.fullRange)));
             List<MerkleTree.TreeRange> diffRange = MerkleTree.difference(tree, rtree.getMerkleTree(tree.fullRange));
-            if(diffRange!=null) differences.addAll(diffRange);
-            //differences.addAll(MerkleTree.difference(tree, rtree.getMerkleTree(tree.fullRange)));
         }
-=======
-        for (MerkleTree tree : ltrees.merkleTrees.values())
-            differences.addAll(MerkleTree.difference(tree, rtrees.getMerkleTree(tree.fullRange)));
->>>>>>> cassandra-5
         return differences;
     }
 
